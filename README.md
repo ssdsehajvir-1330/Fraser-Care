@@ -21,6 +21,8 @@ FraserCare is a browser-based pharmacy service management application designed t
 
 Customers often need to contact pharmacies directly to ask about available services, appointment times, or the status of requests. Some pharmacies offer online booking or informational websites, but these features are not always available together in one system. This can create inconvenience for customers and additional administrative work for staff.
 
+An example of an existing solution is MedMe Health, a pharmacy software platform that provides online appointment scheduling, staff calendars, and patient queue management. While MedMe focuses on supporting real pharmacy operations, FraserCare will explore similar functionality in a simplified educational application. Our project will combine appointment booking with waitlist management, simulated pickup tracking, customer self-check, and drug-product information searches.
+
 FraserCare aims to address these problems by bringing several common pharmacy-related tasks into one application. Instead of relying entirely on phone calls or separate services, customers will be able to view appointment availability, submit requests, and check updates online. Pharmacy staff will be able to manage the same information through a centralized dashboard.
 
 ## Target Audience and Benefits
@@ -55,7 +57,7 @@ The fifth feature will be a customer self-check and drug-product information sea
 
 ## Proposed Technologies and Development Plan
 
-The application will be developed using Java and Spring Boot for backend functionality, HTML, CSS, and JavaScript for the browser-based interface, and PostgreSQL for storing application data. GitHub will be used for collaboration and version control, and the application will be deployed to Render.
+The application will be developed using Java and Spring Boot for backend functionality, HTML, CSS, and JavaScript for the browser-based interface, and a relational database such as PostgreSQL for storing application data. GitHub will be used for collaboration and version control, and the application will be deployed to Render.
 
 Development will take place over multiple iterations. The first iteration will establish the application structure, deployment, and login functionality. Subsequent iterations will expand the appointment, waitlist, and staff management features. By Iteration 3, the application will integrate the external REST API for drug-product information.
 
@@ -67,7 +69,7 @@ Our group consists of five students with different levels of experience in softw
 
 **Alfonse Teruel:** Has experience with Java, C, C++, RISC-V assembly, VHDL, object-oriented programming, Git, GitHub, databases, and software testing through university coursework and previous work-related software engineering projects.
 
-**Mohammed Ananda Anwar:** Has experience with Java, C, C++, React, Python, and R. His web development experience comes from previous coursework and web development assignments. He has limited experience with databases.
+**Mohammed Ananda Anwar:** Has experience with Java, C, C++, React, Python, and R. Experience in web development involves coursework from previous web-development assignments. Limited experience with databases.
 
 **Sehajvir Dhillon:** Has experience with Java, C, C++, RISC-V assembly, VHDL, object-oriented programming, Git, GitHub, databases, and software testing through university coursework and programming assignments. He is interested in gaining more practical experience with Spring Boot and collaborative software development.
 
@@ -80,26 +82,31 @@ Our group consists of five students with different levels of experience in softw
 To ensure that each group member has a substantial contribution, we propose dividing FraserCare into five major features.
 
 ### 1. User Authentication and Account Management
+
 **Assigned Member: Mohammed Ananda Anwar**
 
 Responsible for implementing customer and pharmacy staff accounts, login functionality, session management, and role-based access to different features.
 
 ### 2. Appointment Booking System
+
 **Assigned Member: Alfonse Teruel**
 
 Responsible for allowing customers to browse pharmacy services, view available appointment slots, create bookings, and cancel appointments. This feature will also prevent conflicting reservations.
 
 ### 3. Waitlist Management
+
 **Assigned Member: Enoch Liu**
 
 Responsible for implementing appointment waitlists, allowing customers to join when slots are unavailable and helping staff manage waitlist entries when appointments become available.
 
 ### 4. Pharmacy Staff Dashboard and Pickup Tracking
+
 **Assigned Member: Sehajvir Dhillon**
 
 Responsible for creating a staff interface to manage appointments, monitor waitlists, and update the statuses of simulated pickup requests.
 
 ### 5. Customer Self-Check and External API Integration
+
 **Assigned Member: Hassaan Nasim**
 
 Responsible for developing a simple, non-diagnostic self-check questionnaire that directs customers toward relevant pharmacy services. This member will also lead integration of the proposed Health Canada Drug Product Database REST API.
@@ -114,35 +121,22 @@ Although responsibilities will be divided into these five areas, all members wil
 
 ### Meeting Discussion
 
-- Discussed various project ideas as a group, considering their feasibility, complexity, and how well they would meet the course requirements. After comparing different options, we decided to develop FraserCare, a pharmacy service management platform inspired by real-world pharmacy workflows.
-- Discussed each group member's programming background, previous experience, and areas of interest.
-- Reviewed the CMPT 276 project requirements, including Java, Spring Boot, PostgreSQL, Git, Render, user authentication, and external REST API integration.
-- Discussed the main features of FraserCare, including customer and staff accounts, appointment booking, waitlist management, a pharmacy staff dashboard, and a customer self-check feature.
-- Considered how the five major features could be divided among group members to ensure everyone has a substantial contribution.
-- Discussed GitHub collaboration, deployment, development priorities, and communication methods.
+During our first group meeting, we discussed various project ideas and evaluated their feasibility, complexity, and alignment with the course requirements. After comparing different options, we decided to develop FraserCare, a pharmacy service management platform inspired by real-world pharmacy workflows. We also discussed each group member's programming background, previous experience, and areas of interest.
+
+We reviewed the CMPT 276 project requirements, including Java, Spring Boot, PostgreSQL, Git, Render, user authentication, and external REST API integration. We then discussed FraserCare's main features, including customer and staff accounts, appointment booking, waitlist management, a pharmacy staff dashboard, and a customer self-check feature. We considered how to divide these features among group members to ensure everyone had a substantial contribution. We also discussed GitHub collaboration, deployment, development priorities, and communication methods.
 
 ### Decisions Made
 
-- **Project Selection:** Chose FraserCare, a browser-based pharmacy service management platform designed to simplify appointment scheduling, waitlist management, and communication between customers and pharmacy staff.
-- **Technology Stack:** Agreed to use Java and Spring Boot for backend development, PostgreSQL for database management, HTML/CSS/JavaScript for the frontend, GitHub for version control, and Render for deployment.
-- **Major Features:** Identified five main features: user authentication and account management, appointment booking, waitlist management, pharmacy staff dashboard and pickup tracking, and customer self-check with external REST API integration.
-- **Responsibilities:** Agreed to divide the five major features among group members, with each member responsible for a substantial portion of the application while collaborating on integration and testing.
-- **Development Approach:** Decided to develop the application incrementally, beginning with the initial Spring Boot setup, GitHub repository, Render deployment, and basic authentication before expanding the remaining features.
-- **Collaboration:** Agreed to use GitHub to track individual contributions and a group communication platform to coordinate tasks, share progress, and discuss any issues during development.
+As a group, we decided to develop FraserCare as a browser-based pharmacy service management platform designed to simplify appointment scheduling, waitlist management, and communication between customers and pharmacy staff. We agreed to use Java and Spring Boot for backend development, PostgreSQL for database management, HTML, CSS, and JavaScript for the frontend, GitHub for version control, and Render for deployment.
+
+We identified five major features and agreed to assign one to each group member while collaborating on integration and testing. We also decided to develop the application incrementally, beginning with the initial Spring Boot setup, GitHub repository, Render deployment, and basic authentication before expanding the remaining features. GitHub will be used to track individual contributions, while our group communication platform will help us coordinate tasks, share progress, and address development challenges.
 
 ## Next Meeting and Initial Tasks
 
 **Next Meeting:** October 23, 2026
 
-Before the next meeting, group members will work toward the following objectives:
-
-- Research the requirements and implementation approach for their assigned features.
-- Begin planning the database structure for customer accounts, appointments, and waitlists.
-- Create initial designs for the customer and pharmacy staff interfaces.
-- Evaluate possible external REST APIs and determine which would be most suitable for FraserCare.
-- Familiarize themselves with the project's Spring Boot structure and GitHub workflow.
+Before the next meeting, group members will research the requirements and implementation approaches for their assigned features. We will begin planning the database structure for customer accounts, appointments, and waitlists, while also creating initial designs for the customer and pharmacy staff interfaces. Additionally, we will evaluate potential external REST APIs to determine which would be most suitable for FraserCare and familiarize ourselves with the project's Spring Boot structure and GitHub workflow.
 
 During the next meeting, we will review everyone's progress, discuss technical challenges, finalize our development priorities, and establish tasks for the first iteration.
 
 We plan to meet approximately once or twice per week through Discord to coordinate development, review progress, and address any issues.
-
