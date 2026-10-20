@@ -90,7 +90,7 @@ Responsible for implementing customer and pharmacy staff accounts, login functio
 Responsible for allowing customers to browse pharmacy services, view available appointment slots, create bookings, and cancel appointments. This feature will also prevent conflicting reservations.
 
 ### 3. Waitlist Management
-**Assigned Member: Hassaan Nasim**
+**Assigned Member: Enoch Liu**
 
 Responsible for implementing appointment waitlists, allowing customers to join when slots are unavailable and helping staff manage waitlist entries when appointments become available.
 
@@ -100,7 +100,7 @@ Responsible for implementing appointment waitlists, allowing customers to join w
 Responsible for creating a staff interface to manage appointments, monitor waitlists, and update the statuses of simulated pickup requests.
 
 ### 5. Customer Self-Check and External API Integration
-**Assigned Member: Enoch Liu**
+**Assigned Member: Hassaan Nasim**
 
 Responsible for developing a simple, non-diagnostic self-check questionnaire that directs customers toward relevant pharmacy services. This member will also lead integration of the proposed Health Canada Drug Product Database REST API.
 
