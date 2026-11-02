@@ -1,0 +1,336 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | FraserCare</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f7f6;
+            color:#26332f;
+        }
+
+        header {
+            background-color: #176b55;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h2 {
+            font-size: 23px;
+        }
+
+        header span {
+            font-size: 14px;
+        }
+
+        main {
+            max-width: 1150px;
+            margin: 40px auto;
+            padding: 0 25px;
+        }
+
+        .welcome {
+            margin-bottom: 30px;
+        }
+
+        .welcome h1 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: #69766f;
+        }
+
+        .summary {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #e1e8e4;
+        }
+
+        .summary h3 {
+            color: #69766f;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .summary h2 {
+            font-size: 32px;
+            color: #176b55;
+        }
+
+        .appointments {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid #e1e8e4;
+        }
+
+        .appointments h2 {
+            margin-bottom: 8px;
+        }
+
+        .appointments p {
+            color: #69766f;
+            margin-bottom: 22px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #e8eeea;
+        }
+
+        th {
+            background-color: #f5f7f6;
+            color: #52635a;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .status {
+            background: #e1f4e9;
+            color: #176b55;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 45px 15px;
+            color: #69766f;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #26332f;
+        }
+
+        .demo-note {
+            background: #fff6df;
+            color: #795b16;
+            padding: 12px 15px;
+            border-radius: 7px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 18px;
+            }
+
+            main {
+                margin-top: 25px;
+                padding: 0 15px;
+            }
+
+            .appointments {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h2>FraserCare</h2>
+        <span>Pharmacy Staff Portal</span>
+    </header>
+
+    <main>
+
+        <section class="welcome">
+            <h1>Staff Dashboard</h1>
+            <p id="today-date"></p>
+        </section>
+
+        <section class="summary">
+            <h3>TODAY'S APPOINTMENTS</h3>
+            <h2 id="appointment-count">0</h2>
+        </section>
+
+        <section class="appointments">
+
+            <h2>Appointment Schedule</h2>
+            <p>View all scheduled appointments for today.</p>
+
+            <div class="demo-note">
+                Demo mode: Showing sample appointment data.
+            </div>
+
+            <div class="table-container" id="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Customer</th>
+                            <th>Pharmacy Service</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="appointment-rows">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" id="empty-state" hidden>
+                <h3>No appointments today</h3>
+                <p>There are currently no appointments scheduled for today.</p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+
+        // Sample appointments for testing
+        const appointments = [
+            {
+                customerName: "Sarah Lee",
+                serviceName: "Flu Vaccination",
+                startTime: "09:00",
+                endTime: "09:30",
+                status: "BOOKED"
+            },
+            {
+                customerName: "James Wilson",
+                serviceName: "Medication Review",
+                startTime: "10:15",
+                endTime: "10:45",
+                status: "BOOKED"
+            },
+            {
+                customerName: "Emily Brown",
+                serviceName: "Blood Pressure Check",
+                startTime: "11:30",
+                endTime: "11:45",
+                status: "BOOKED"
+            }
+        ];
+
+        // Display today's date
+        document.getElementById("today-date").textContent =
+            new Date().toLocaleDateString("en-CA", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+
+        // Convert time into a readable format
+        function formatTime(time) {
+            const [hours, minutes] = time.split(":");
+            const date = new Date();
+
+            date.setHours(Number(hours), Number(minutes));
+
+            return date.toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit"
+            });
+        }
+
+        // Display appointments in the table
+        function displayAppointments() {
+
+            const table = document.getElementById("table-container");
+            const emptyState = document.getElementById("empty-state");
+            const appointmentRows =
+                document.getElementById("appointment-rows");
+
+            // Sort appointments by start time
+            const sortedAppointments = [...appointments].sort(
+                (a, b) => a.startTime.localeCompare(b.startTime)
+            );
+
+            document.getElementById("appointment-count").textContent =
+                sortedAppointments.length;
+
+            appointmentRows.innerHTML = "";
+
+            // Show a message if there are no appointments
+            if (sortedAppointments.length === 0) {
+                table.hidden = true;
+                emptyState.hidden = false;
+                return;
+            }
+
+            table.hidden = false;
+            emptyState.hidden = true;
+
+            sortedAppointments.forEach(appointment => {
+
+                const row = document.createElement("tr");
+
+                const timeCell = document.createElement("td");
+                timeCell.textContent =
+                    formatTime(appointment.startTime) + " - " +
+                    formatTime(appointment.endTime);
+
+                const customerCell = document.createElement("td");
+                customerCell.textContent = appointment.customerName;
+
+                const serviceCell = document.createElement("td");
+                serviceCell.textContent = appointment.serviceName;
+
+                const statusCell = document.createElement("td");
+                const statusBadge = document.createElement("span");
+
+                statusBadge.className = "status";
+                statusBadge.textContent = appointment.status;
+
+                statusCell.appendChild(statusBadge);
+
+                row.appendChild(timeCell);
+                row.appendChild(customerCell);
+                row.appendChild(serviceCell);
+                row.appendChild(statusCell);
+
+                appointmentRows.appendChild(row);
+            });
+        }
+
+        // Load the appointments
+        displayAppointments();
+
+    </script>
+
+</body>
+</html>
