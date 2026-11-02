@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FraserCare - Sign Up</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf5f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .signup-box {
+            background: white;
+            padding: 40px;
+            width: 380px;
+            max-width: calc(100% - 32px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #00000015;
+        }
+
+        h1 {
+            text-align: center;
+            color: #16805d;
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #16805d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #106747;
+        }
+
+        .login-link {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        a {
+            color: #16805d;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="signup-box">
+        <h1>FraserCare</h1>
+        <p>Create your account</p>
+
+        <form id="signupForm">
+            <input type="text"
+                   name="fullName"
+                   placeholder="Full Name"
+                   autocomplete="name"
+                   required>
+
+            <input type="email"
+                   name="email"
+                   placeholder="Email Address"
+                   autocomplete="email"
+                   required>
+
+            <input type="password"
+                   name="password"
+                   id="password"
+                   placeholder="Password (minimum 8 characters)"
+                   autocomplete="new-password"
+                   minlength="8"
+                   required>
+
+            <input type="password"
+                   name="confirmPassword"
+                   id="confirmPassword"
+                   placeholder="Confirm Password"
+                   autocomplete="new-password"
+                   required>
+
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <p id="message" role="alert"></p>
+
+        <p class="login-link">
+            Already have an account?
+            <a href="/login.html">Login</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById("signupForm")
+            .addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                const password =
+                    document.getElementById("password").value;
+
+                const confirmPassword =
+                    document.getElementById("confirmPassword").value;
+
+                const message =
+                    document.getElementById("message");
+
+                if (password !== confirmPassword) {
+                    message.style.color = "red";
+                    message.textContent =
+                        "Passwords do not match.";
+                    return;
+                }
+
+                message.style.color = "#16805d";
+                message.textContent =
+                    "Form validated. Account creation " +
+                    "is not connected yet.";
+            });
+    </script>
+</body>
+</html>

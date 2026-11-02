@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FraserCare - Login</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf5f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            width: 350px;
+            max-width: calc(100% - 48px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #00000015;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #16805d;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #16805d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #106747;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h1>FraserCare</h1>
+        <p style="text-align:center;">Sign in to your account</p>
+
+        <form action="/login" method="post">
+            <input type="text" name="username"
+                   placeholder="Username" required>
+
+            <input type="password" name="password"
+                   placeholder="Password" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p style="text-align: center; margin-top: 20px;">
+            Don't have an account?
+            <a href="/signup.html" style="color: #16805d;">
+                Sign Up
+            </a>
+        </p>
+    </div>
+
+</body>
+</html>

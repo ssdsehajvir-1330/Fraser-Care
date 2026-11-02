@@ -13,11 +13,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/favicon.ico",
-                                 "/css/**", "/js/**").permitAll()
+                .requestMatchers("/", "/index.html", "/login.html", "/signup.html", "/favicon.ico", "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .formLogin(Customizer.withDefaults());
+            .formLogin(form -> form
+            .loginPage("/login.html")
+            .loginProcessingUrl("/login")
+            .defaultSuccessUrl("/", true)
+            .permitAll()
+        );
 
         return http.build();
     }
