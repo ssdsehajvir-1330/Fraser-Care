@@ -23,12 +23,20 @@ public class HealthCanadaDrugClient {
     }
 
     public List<DpdDrugProduct> searchByBrandName(String brandName) {
+        return fetchProducts("brandname", brandName);
+    }
+
+    public List<DpdDrugProduct> findByDin(String din) {
+        return fetchProducts("din", din);
+    }
+
+    private List<DpdDrugProduct> fetchProducts(String param, String value) {
         DpdDrugProduct[] products = restClient.get()
                 .uri(uri -> uri.path("/drugproduct/")
-                        .queryParam("brandname", brandName)
+                        .queryParam(param, "{value}")
                         .queryParam("lang", "en")
                         .queryParam("type", "json")
-                        .build())
+                        .build(value))
                 .retrieve()
                 .body(DpdDrugProduct[].class);
         return products == null ? List.of() : List.of(products);
