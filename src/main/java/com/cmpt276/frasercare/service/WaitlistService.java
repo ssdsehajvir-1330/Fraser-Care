@@ -13,7 +13,9 @@ public class WaitlistService {
     private final WaitlistRepository waitlistRepository;
     private final AppointmentBookingService appointmentBookingService;
 
-    public WaitlistService(WaitlistRepository waitlistRepository, AppointmentBookingService appointmentBookingService) {
+    public WaitlistService(
+            WaitlistRepository waitlistRepository,
+            AppointmentBookingService appointmentBookingService) {
 
         this.waitlistRepository = waitlistRepository;
         this.appointmentBookingService = appointmentBookingService;
@@ -34,37 +36,46 @@ public class WaitlistService {
     // Add customer to the waitlist
     public WaitlistEntry joinWaitlist(WaitlistEntry entry) {
 
-        if (entry.getCustomerId() == null ||
+        // Validate required information
+        if (entry == null ||
+            entry.getCustomerId() == null ||
             entry.getServiceId() == null ||
             entry.getAppointmentDate() == null ||
             entry.getStartTime() == null ||
             entry.getEndTime() == null) {
-            
-            // Check whether the appointment time is available
-            List<LocalTime> availableTimes =
-                appointmentBookingService.getAvailableStartTimes(
-                    entry.getServiceId(),
-                    entry.getAppointmentDate()
-                );
 
-            // A customer should book normally if the slot is available
-            if (availableTimes.contains(entry.getStartTime())) {
-                throw new IllegalStateException(
-                    "This appointment slot is available. Please book it instead."
-                );
-            }
-
+            throw new IllegalArgumentException(
+                "Missing required waitlist information."
+            );
         }
 
+        // Reject past dates
         if (entry.getAppointmentDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException(
                 "Cannot join a waitlist for a past date."
             );
         }
 
+        // Validate appointment time range
         if (!entry.getEndTime().isAfter(entry.getStartTime())) {
             throw new IllegalArgumentException(
                 "Invalid appointment time range."
+            );
+        }
+
+        // Check that the requested slot is valid and already booked
+        boolean eligible =
+            appointmentBookingService.isWaitlistEligibleSlot(
+                entry.getServiceId(),
+                entry.getAppointmentDate(),
+                entry.getStartTime(),
+                entry.getEndTime()
+            );
+
+        // Customers cannot join a waitlist for an available slot
+        if (!eligible) {
+            throw new IllegalStateException(
+                "This appointment slot is available. Please book it instead."
             );
         }
 
@@ -75,10 +86,10 @@ public class WaitlistService {
             entry.getStartTime()
         );
 
-        // Stop same customer from joining twice
+        // Stop the same customer from joining twice
         for (WaitlistEntry existing : existingEntries) {
             if (existing.getCustomerId().equals(entry.getCustomerId())
-                    && existing.getStatus().equals("WAITING")) {
+                    && "WAITING".equals(existing.getStatus())) {
 
                 throw new IllegalStateException(
                     "Customer is already on this waitlist."
@@ -86,6 +97,7 @@ public class WaitlistService {
             }
         }
 
+        // Create a new waiting entry
         entry.setWaitlistId(null);
         entry.setJoinedAt(null);
         entry.setStatus("WAITING");
@@ -112,8 +124,8 @@ public class WaitlistService {
                 "Waitlist entry not found."
             ));
 
-        if (!status.equals("WAITING") &&
-            !status.equals("NOTIFIED")) {
+        if (!"WAITING".equals(status) &&
+            !"NOTIFIED".equals(status)) {
 
             throw new IllegalArgumentException(
                 "Invalid waitlist status."

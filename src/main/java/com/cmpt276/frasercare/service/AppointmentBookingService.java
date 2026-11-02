@@ -1,3 +1,4 @@
+
 package com.cmpt276.frasercare.service;
 
 import com.cmpt276.frasercare.dto.StaffAppointmentResponse;
@@ -84,7 +85,6 @@ public class AppointmentBookingService {
             throw new IllegalArgumentException("Appointment time cannot be in the past.");
         }
 
-
         boolean conflict = appointmentRepository
                 .existsByAppointmentDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
                         appointment.getAppointmentDate(),
@@ -129,6 +129,7 @@ public class AppointmentBookingService {
 
         return appointmentRepository.save(appointment);
     }
+
     public List<LocalTime> getAvailableStartTimes(Long serviceId, LocalDate date) {
 
         if (serviceId == null || serviceId <= 0 || date == null) {
@@ -185,6 +186,89 @@ public class AppointmentBookingService {
         return availableTimes;
     }
 
+    // Check whether a valid appointment slot is already booked
+    // and therefore eligible for the waitlist
+    public boolean isWaitlistEligibleSlot(
+            Long serviceId,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime) {
+
+        if (serviceId == null || serviceId <= 0 ||
+            date == null || startTime == null || endTime == null) {
+            throw new IllegalArgumentException(
+                "Missing or invalid appointment details."
+            );
+        }
+
+        ZoneId timeZone = ZoneId.of("America/Vancouver");
+        LocalDate today = LocalDate.now(timeZone);
+
+        if (date.isBefore(today)) {
+            throw new IllegalArgumentException(
+                "Appointment date cannot be in the past."
+            );
+        }
+
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException(
+                "End time must be after start time."
+            );
+        }
+
+        PharmacyService service = pharmacyServiceRepository.findById(serviceId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Pharmacy service not found."
+                ));
+
+        if (!service.isActive()) {
+            throw new IllegalArgumentException(
+                "Pharmacy service is not active."
+            );
+        }
+
+        Duration duration = Duration.between(startTime, endTime);
+
+        if (!duration.equals(Duration.ofMinutes(service.getDurationMinutes()))) {
+            throw new IllegalArgumentException(
+                "Appointment duration does not match service duration."
+            );
+        }
+
+        LocalTime openingTime = LocalTime.of(9, 0);
+        LocalTime closingTime = LocalTime.of(17, 0);
+
+        if (startTime.isBefore(openingTime) ||
+            endTime.isAfter(closingTime)) {
+            throw new IllegalArgumentException(
+                "Appointment must be between 9 AM and 5 PM."
+            );
+        }
+
+        if (startTime.getMinute() % 15 != 0 ||
+            startTime.getSecond() != 0 ||
+            startTime.getNano() != 0) {
+            throw new IllegalArgumentException(
+                "Appointments must start every 15 minutes."
+            );
+        }
+
+        if (date.equals(today) &&
+            !startTime.isAfter(LocalTime.now(timeZone))) {
+            throw new IllegalArgumentException(
+                "Appointment time cannot be in the past."
+            );
+        }
+
+        // Return true only if a BOOKED appointment overlaps this slot
+        return appointmentRepository
+                .existsByAppointmentDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
+                    date,
+                    "BOOKED",
+                    endTime,
+                    startTime
+                );
+    }
 
     public List<StaffAppointmentResponse> getStaffAppointmentsByDate(LocalDate date) {
 
