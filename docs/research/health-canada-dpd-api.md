@@ -73,7 +73,7 @@ I called the endpoints directly on Nov 1, 2026.
 
 9. The official jQuery examples reference `data.panels[0].text`, which doesn't exist in any response, so the examples look outdated. I didn't use them.
 
-## Integration design (proposed)
+## Integration design
 
 ```
 Browser (drug-search.html)
@@ -93,6 +93,13 @@ HTTP client: Spring's `RestClient` (already included with `spring-boot-starter-w
 
 Error handling: if Health Canada is down or times out, our endpoint returns **502** with a friendly message instead of a 500 stack trace.
 
+### Notes from implementing it
+
+- Brand names can contain `&` (e.g. "ADVIL COLD & SINUS"). If the value goes straight into the URI template, the `&` breaks the query string. The client passes the search term as a URI variable (`{value}`), so Spring encodes it properly.
+- Input is validated before calling Health Canada. Brand names must be 3–60 characters; DINs must be 1–8 digits and get left-padded with zeros.
+- Results are capped at 50, since broad searches can match a lot of products (a plain "advil" search already returns 48).
+- Tests use `MockRestServiceServer`, so they never call the real API. That means they run offline and in CI.
+
 ## Licence / terms
 
 The DPD dataset is published on the Open Government Portal [3]. Health Canada's DPD pages point to the "Drug Product Database Terms and Conditions". We only display public product info and add a note that it comes from Health Canada. **TODO:** read the full terms and confirm the attribution wording.
@@ -101,10 +108,10 @@ The DPD dataset is published on the Open Government Portal [3]. Health Canada's 
 
 **Iteration 1 (this PR)**
 - [x] Research spike (this document)
-- [ ] Java client for brand name search and DIN lookup
-- [ ] `GET /api/drugs?brand=` and `GET /api/drugs?din=`
-- [ ] Basic search page
-- [ ] Unit tests with mocked HTTP
+- [x] Java client for brand name search and DIN lookup
+- [x] `GET /api/drugs?brand=` and `GET /api/drugs?din=`
+- [x] Basic search page
+- [x] Unit tests with mocked HTTP
 
 **Iteration 2–3**
 - [ ] Product details view: active ingredients + strength (`activeingredient/`)
