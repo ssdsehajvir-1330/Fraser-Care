@@ -124,32 +124,69 @@
         </p>
     </div>
 
+    
     <script>
-        document.getElementById("signupForm")
-            .addEventListener("submit", function(event) {
+            document.forms[0]
+                .addEventListener("submit", async function(event) {
                 event.preventDefault();
 
-                const password =
-                    document.getElementById("password").value;
-
-                const confirmPassword =
-                    document.getElementById("confirmPassword").value;
-
-                const message =
-                    document.getElementById("message");
+                const form = event.target;
+                const password = form.querySelector(
+                    '[name="password"]').value;
+                const confirmPassword = form.querySelector(
+                    '[name="confirmPassword"]').value;
+                const message = document.getElementById("message");
 
                 if (password !== confirmPassword) {
                     message.style.color = "red";
-                    message.textContent =
-                        "Passwords do not match.";
+                    message.textContent = "Passwords do not match.";
                     return;
                 }
 
-                message.style.color = "#16805d";
-                message.textContent =
-                    "Form validated. Account creation " +
-                    "is not connected yet.";
+                try {
+                    // Get CSRF token
+                    const csrfResponse = await fetch("/csrf");
+
+                    if (!csrfResponse.ok) {
+                        throw new Error("Could not get CSRF token");
+                    }
+
+                    const csrf = await csrfResponse.json();
+
+                    // Send registration information
+                    const response = await fetch("/api/register", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            [csrf.headerName]: csrf.token
+                        },
+                        body: JSON.stringify({
+                            fullName: form.querySelector(
+                                '[name="fullName"]').value,
+                            email: form.querySelector(
+                                '[name="email"]').value,
+                            password: password
+                        })
+                    });
+
+                    const result = await response.text();
+
+                    message.style.color =
+                        response.ok ? "green" : "red";
+                    message.textContent = result;
+
+                    if (response.ok) {
+                        form.reset();
+                        window.location.href = "/login.html";
+                    }
+
+                } catch (error) {
+                    message.style.color = "red";
+                    message.textContent = "Error: " + error.message;
+                    console.error("Registration error:", error);
+                }
             });
     </script>
+
 </body>
 </html>
