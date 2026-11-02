@@ -2,11 +2,22 @@ package com.cmpt276.frasercare.service;
 
 import com.cmpt276.frasercare.model.SelfCheckOption;
 import com.cmpt276.frasercare.model.SelfCheckQuestion;
+import com.cmpt276.frasercare.model.SelfCheckResult;
 import org.springframework.stereotype.Service;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class SelfCheckService {
+
+    static final String FLU_VACCINATION = "Flu Vaccination";
+    static final String MEDICATION_REVIEW = "Medication Review";
+    static final String BLOOD_PRESSURE_CHECK = "Blood Pressure Check";
+    // TODO: add these two to the pharmacy_services catalogue
+    static final String MINOR_AILMENT_CONSULTATION = "Minor Ailment Consultation";
+    static final String GENERAL_CONSULTATION = "General Pharmacist Consultation";
 
     private static final SelfCheckOption YES = new SelfCheckOption("yes", "Yes");
     private static final SelfCheckOption NO = new SelfCheckOption("no", "No");
@@ -32,5 +43,41 @@ public class SelfCheckService {
 
     public List<SelfCheckQuestion> getQuestions() {
         return QUESTIONS;
+    }
+
+    public SelfCheckResult evaluate(Map<String, String> answers) {
+        if (answers == null) {
+            throw new IllegalArgumentException("Answers are required");
+        }
+        requireValidAnswer(QUESTIONS.get(0), answers);
+        if ("yes".equals(answers.get("urgent"))) {
+            return SelfCheckResult.urgentCare();
+        }
+        QUESTIONS.forEach(question -> requireValidAnswer(question, answers));
+
+        Set<String> services = new LinkedHashSet<>();
+        services.add(switch (answers.get("reason")) {
+            case "vaccine" -> FLU_VACCINATION;
+            case "medications" -> MEDICATION_REVIEW;
+            case "blood-pressure" -> BLOOD_PRESSURE_CHECK;
+            case "minor-ailment" -> MINOR_AILMENT_CONSULTATION;
+            default -> GENERAL_CONSULTATION;
+        });
+        if ("yes".equals(answers.get("multiple-meds"))) {
+            services.add(MEDICATION_REVIEW);
+        }
+        if (!"yes".equals(answers.get("flu-shot"))) {
+            services.add(FLU_VACCINATION);
+        }
+        if (!"yes".equals(answers.get("bp-checked"))) {
+            services.add(BLOOD_PRESSURE_CHECK);
+        }
+        return SelfCheckResult.recommend(List.copyOf(services));
+    }
+
+    private void requireValidAnswer(SelfCheckQuestion question, Map<String, String> answers) {
+        if (!question.accepts(answers.get(question.id()))) {
+            throw new IllegalArgumentException("Missing or invalid answer for question: " + question.id());
+        }
     }
 }

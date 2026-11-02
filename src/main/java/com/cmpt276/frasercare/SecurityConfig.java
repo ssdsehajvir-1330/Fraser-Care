@@ -17,6 +17,7 @@ public class SecurityConfig {
                                  "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
             )
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/self-check/**"))
             .formLogin(Customizer.withDefaults());
 
         return http.build();
