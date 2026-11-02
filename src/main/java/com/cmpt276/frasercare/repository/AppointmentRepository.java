@@ -16,9 +16,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     );
 
     List<Appointment> findByCustomerIdOrderByAppointmentDateAscStartTimeAsc(Long customerId);
+
     List<Appointment> findByAppointmentDateAndStatus(
             LocalDate appointmentDate,
             String status
     );
 
+    List<Appointment> findByAppointmentDateOrderByStartTimeAsc(
+            LocalDate appointmentDate
+    );
 }

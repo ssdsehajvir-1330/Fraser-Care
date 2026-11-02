@@ -1,5 +1,6 @@
 package com.cmpt276.frasercare.service;
 
+import com.cmpt276.frasercare.dto.StaffAppointmentResponse;
 import com.cmpt276.frasercare.model.Appointment;
 import com.cmpt276.frasercare.model.PharmacyService;
 import com.cmpt276.frasercare.repository.AppointmentRepository;
@@ -182,6 +183,42 @@ public class AppointmentBookingService {
         }
 
         return availableTimes;
+    }
+
+
+    public List<StaffAppointmentResponse> getStaffAppointmentsByDate(LocalDate date) {
+
+        if (date == null) {
+            throw new IllegalArgumentException("Appointment date is required.");
+        }
+
+        List<Appointment> appointments =
+                appointmentRepository.findByAppointmentDateOrderByStartTimeAsc(date);
+
+        List<StaffAppointmentResponse> responses = new ArrayList<>();
+
+        for (Appointment appointment : appointments) {
+
+            PharmacyService service = pharmacyServiceRepository
+                    .findById(appointment.getServiceId())
+                    .orElse(null);
+
+            String serviceName = service == null ? null : service.getName();
+
+            responses.add(new StaffAppointmentResponse(
+                    appointment.getAppointmentId(),
+                    appointment.getCustomerId(),
+                    null,
+                    appointment.getServiceId(),
+                    serviceName,
+                    appointment.getAppointmentDate(),
+                    appointment.getStartTime(),
+                    appointment.getEndTime(),
+                    appointment.getStatus()
+            ));
+        }
+
+        return responses;
     }
 
 }
