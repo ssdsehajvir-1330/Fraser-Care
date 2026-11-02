@@ -122,8 +122,10 @@ function displayAppointments() {
             formatTime(appointment.startTime) + " - " +
             formatTime(appointment.endTime);
 
+        // Display the customer name or customer ID if the name is unavailable
         const customerCell = document.createElement("td");
-        customerCell.textContent = appointment.customerName;
+        customerCell.textContent = appointment.customerName ||
+        `Customer #${appointment.customerId}`;
 
         const serviceCell = document.createElement("td");
         serviceCell.textContent = appointment.serviceName;
