@@ -220,30 +220,51 @@
 
     <script>
 
-        // Sample appointments for testing
-        const appointments = [
-            {
-                customerName: "Sarah Lee",
-                serviceName: "Flu Vaccination",
-                startTime: "09:00",
-                endTime: "09:30",
-                status: "BOOKED"
-            },
-            {
-                customerName: "James Wilson",
-                serviceName: "Medication Review",
-                startTime: "10:15",
-                endTime: "10:45",
-                status: "BOOKED"
-            },
-            {
-                customerName: "Emily Brown",
-                serviceName: "Blood Pressure Check",
-                startTime: "11:30",
-                endTime: "11:45",
-                status: "BOOKED"
-            }
-        ];
+        
+      // Sample appointments for testing
+const today = new Date();
+
+const todayISO = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0")
+].join("-");
+
+const appointments = [
+    {
+        appointmentId: 1,
+        customerId: 101,
+        customerName: "Sarah Lee",
+        serviceId: 1,
+        serviceName: "Flu Vaccination",
+        appointmentDate: todayISO,
+        startTime: "09:00:00",
+        endTime: "09:30:00",
+        status: "BOOKED"
+    },
+    {
+        appointmentId: 2,
+        customerId: 102,
+        customerName: "James Wilson",
+        serviceId: 2,
+        serviceName: "Medication Review",
+        appointmentDate: todayISO,
+        startTime: "10:15:00",
+        endTime: "10:45:00",
+        status: "BOOKED"
+    },
+    {
+        appointmentId: 3,
+        customerId: 103,
+        customerName: "Emily Brown",
+        serviceId: 3,
+        serviceName: "Blood Pressure Check",
+        appointmentDate: todayISO,
+        startTime: "11:30:00",
+        endTime: "11:45:00",
+        status: "BOOKED"
+    }
+];
 
         // Display today's date
         document.getElementById("today-date").textContent =
