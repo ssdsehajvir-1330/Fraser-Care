@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drug Product Search | FraserCare</title>
+    <link rel="stylesheet" href="/css/drug-search.css">
+</head>
+<body>
+    <main>
+        <h1>Drug Product Search</h1>
+        <p class="notice">Search Canadian drug products by brand name or DIN (the 8-digit number on the package).</p>
+
+        <form id="drug-search-form">
+            <select id="search-type" aria-label="Search by">
+                <option value="brand">Brand name</option>
+                <option value="din">DIN</option>
+            </select>
+            <input id="search-query" type="text" placeholder="e.g. Advil" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <p id="status" role="status"></p>
+
+        <table id="results" hidden>
+            <thead>
+                <tr>
+                    <th>Brand name</th>
+                    <th>DIN</th>
+                    <th>Company</th>
+                    <th>Class</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <p class="source">Data from Health Canada's Drug Product Database. This is product information only, not medical advice.</p>
+    </main>
+    <script src="/js/drug-search.js"></script>
+</body>
+</html>
