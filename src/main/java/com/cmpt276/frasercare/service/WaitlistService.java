@@ -11,9 +11,12 @@ import java.util.List;
 public class WaitlistService {
 
     private final WaitlistRepository waitlistRepository;
+    private final AppointmentBookingService appointmentBookingService;
 
-    public WaitlistService(WaitlistRepository waitlistRepository) {
+    public WaitlistService(WaitlistRepository waitlistRepository, AppointmentBookingService appointmentBookingService) {
+
         this.waitlistRepository = waitlistRepository;
+        this.appointmentBookingService = appointmentBookingService;
     }
 
     // Retrieve customers waiting for a particular appointment time
@@ -36,10 +39,21 @@ public class WaitlistService {
             entry.getAppointmentDate() == null ||
             entry.getStartTime() == null ||
             entry.getEndTime() == null) {
+            
+            // Check whether the appointment time is available
+            List<LocalTime> availableTimes =
+                appointmentBookingService.getAvailableStartTimes(
+                    entry.getServiceId(),
+                    entry.getAppointmentDate()
+                );
 
-            throw new IllegalArgumentException(
-                "Missing required waitlist information."
-            );
+            // A customer should book normally if the slot is available
+            if (availableTimes.contains(entry.getStartTime())) {
+                throw new IllegalStateException(
+                    "This appointment slot is available. Please book it instead."
+                );
+            }
+
         }
 
         if (entry.getAppointmentDate().isBefore(LocalDate.now())) {
