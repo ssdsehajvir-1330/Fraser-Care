@@ -1,4 +1,7 @@
-// Sample appointments for testing
+// Get the date input
+const dateInput = document.getElementById("appointment-date");
+
+// Get today's date
 const today = new Date();
 
 const todayISO = [
@@ -7,49 +10,15 @@ const todayISO = [
     String(today.getDate()).padStart(2, "0")
 ].join("-");
 
-const appointments = [
-    {
-        appointmentId: 1,
-        customerId: 101,
-        customerName: "Sarah Lee",
-        serviceId: 1,
-        serviceName: "Flu Vaccination",
-        appointmentDate: todayISO,
-        startTime: "09:00:00",
-        endTime: "09:30:00",
-        status: "BOOKED"
-    },
-    {
-        appointmentId: 2,
-        customerId: 102,
-        customerName: "James Wilson",
-        serviceId: 2,
-        serviceName: "Medication Review",
-        appointmentDate: todayISO,
-        startTime: "10:15:00",
-        endTime: "10:45:00",
-        status: "BOOKED"
-    },
-    {
-        appointmentId: 3,
-        customerId: 103,
-        customerName: "Emily Brown",
-        serviceId: 3,
-        serviceName: "Blood Pressure Check",
-        appointmentDate: todayISO,
-        startTime: "11:30:00",
-        endTime: "11:45:00",
-        status: "BOOKED"
-    }
-];
-
-const dateInput = document.getElementById("appointment-date");
-
 // Set today's date as the default selected date
 dateInput.value = todayISO;
 
 // Convert time into a readable format
 function formatTime(time) {
+    if (!time) {
+        return "N/A";
+    }
+
     const [hours, minutes] = time.split(":");
     const date = new Date();
 
@@ -61,8 +30,19 @@ function formatTime(time) {
     });
 }
 
+// Display a message when loading or when there are no appointments
+function showMessage(title, message) {
+    document.getElementById("table-container").hidden = true;
+
+    const emptyState = document.getElementById("empty-state");
+
+    emptyState.hidden = false;
+    emptyState.querySelector("h3").textContent = title;
+    emptyState.querySelector("p").textContent = message;
+}
+
 // Display appointments for the selected date
-function displayAppointments() {
+async function displayAppointments() {
 
     const selectedDate = dateInput.value;
 
@@ -71,17 +51,6 @@ function displayAppointments() {
 
     const appointmentRows =
         document.getElementById("appointment-rows");
-
-    // Filter appointments by the selected date
-    const selectedAppointments = appointments.filter(
-        appointment =>
-            appointment.appointmentDate === selectedDate
-    );
-
-    // Sort appointments by start time
-    selectedAppointments.sort((a, b) =>
-        a.startTime.localeCompare(b.startTime)
-    );
 
     // Display the selected date
     const date = selectedDate
@@ -96,59 +65,125 @@ function displayAppointments() {
             day: "numeric"
         }) : "Select an appointment date";
 
-    // Update the appointment count
-    document.getElementById("appointment-count").textContent =
-        selectedAppointments.length;
+    // Reset the appointment count
+    document.getElementById("appointment-count").textContent = "0";
 
     appointmentRows.innerHTML = "";
 
-    // Show a message if there are no appointments
-    if (selectedAppointments.length === 0) {
-        table.hidden = true;
-        emptyState.hidden = false;
+    if (!selectedDate) {
+        showMessage("Select a date", "Choose a date to view appointments.");
         return;
     }
 
-    table.hidden = false;
-    emptyState.hidden = true;
+    // Show loading message
+    showMessage("Loading appointments...", "Please wait while appointments are retrieved.");
 
-    // Display appointments in the table
-    selectedAppointments.forEach(appointment => {
+    try {
 
-        const row = document.createElement("tr");
+        // Retrieve appointments from the backend
+        const response = await fetch(
+            `/api/staff/appointments?date=${encodeURIComponent(selectedDate)}`,
+            {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin"
+            }
+        );
 
-        const timeCell = document.createElement("td");
-        timeCell.textContent =
-            formatTime(appointment.startTime) + " - " +
-            formatTime(appointment.endTime);
+        // Check if the request was successful
+        if (!response.ok) {
+            throw new Error("Unable to retrieve appointments. Status: " + response.status);
+        }
 
-        // Display the customer name or customer ID if the name is unavailable
-        const customerCell = document.createElement("td");
-        customerCell.textContent = appointment.customerName ||
-        `Customer #${appointment.customerId}`;
+        // Check if the backend returned JSON
+        const contentType = response.headers.get("content-type") || "";
 
-        const serviceCell = document.createElement("td");
-        serviceCell.textContent = appointment.serviceName;
+        if (!contentType.includes("application/json")) {
+            throw new Error("Please sign in again to access appointments.");
+        }
 
-        const statusCell = document.createElement("td");
-        const statusBadge = document.createElement("span");
+        // Convert the response into JavaScript data
+        const appointments = await response.json();
 
-        statusBadge.className = "status";
-        statusBadge.textContent = appointment.status;
+        if (!Array.isArray(appointments)) {
+            throw new Error("Invalid appointment data received.");
+        }
 
-        statusCell.appendChild(statusBadge);
+        // Sort appointments by start time
+        const sortedAppointments = [...appointments].sort(
+            (a, b) => a.startTime.localeCompare(b.startTime)
+        );
 
-        row.appendChild(timeCell);
-        row.appendChild(customerCell);
-        row.appendChild(serviceCell);
-        row.appendChild(statusCell);
+        // Update the appointment count
+        document.getElementById("appointment-count").textContent =
+            sortedAppointments.length;
 
-        appointmentRows.appendChild(row);
-    });
+        // Show a message if there are no appointments
+        if (sortedAppointments.length === 0) {
+            showMessage(
+                "No appointments today",
+                "There are currently no appointments scheduled for this date."
+            );
+            return;
+        }
+
+        // Display the appointment table
+        table.hidden = false;
+        emptyState.hidden = true;
+
+        // Display appointments in the table
+        sortedAppointments.forEach(appointment => {
+
+            const row = document.createElement("tr");
+
+            const timeCell = document.createElement("td");
+            timeCell.textContent =
+                formatTime(appointment.startTime) + " - " +
+                formatTime(appointment.endTime);
+
+            // Display the customer name or customer ID if the name is unavailable
+            const customerCell = document.createElement("td");
+            customerCell.textContent = appointment.customerName ||
+                `Customer #${appointment.customerId}`;
+
+            const serviceCell = document.createElement("td");
+            serviceCell.textContent = appointment.serviceName ||
+                `Service #${appointment.serviceId}`;
+
+            const statusCell = document.createElement("td");
+            const statusBadge = document.createElement("span");
+
+            statusBadge.className = "status";
+            statusBadge.textContent = appointment.status || "UNKNOWN";
+
+            statusCell.appendChild(statusBadge);
+
+            row.appendChild(timeCell);
+            row.appendChild(customerCell);
+            row.appendChild(serviceCell);
+            row.appendChild(statusCell);
+
+            appointmentRows.appendChild(row);
+        });
+
+    } catch (error) {
+
+        // Display an error if appointments cannot be retrieved
+        console.error("Error loading appointments:", error);
+
+        document.getElementById("appointment-count").textContent = "0";
+
+        showMessage(
+            "Unable to load appointments",
+            error.message
+        );
+    }
 }
 
 // Update appointments whenever the selected date changes
 dateInput.addEventListener("change", displayAppointments);
 
-// Load the appointments
+// Load appointments when the dashboard opens
 displayAppointments();
