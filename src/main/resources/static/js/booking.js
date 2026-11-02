@@ -223,8 +223,18 @@ bookingForm.addEventListener("submit", event => {
         return;
     }
 
+    const appointmentDetails = {
+        serviceId: selectedService.serviceId,
+        appointmentDate: appointmentDate.value,
+        startTime: selectedTime,
+        endTime: calculateEndTime(
+            selectedTime,
+            selectedService.durationMinutes
+        )
+    };
+
     showMessage(
-        "Your selections are ready. Final booking submission requires customer authentication to be connected."
+        "Your appointment details are ready. Booking confirmation will be available once customer authentication is connected."
     );
 });
 
