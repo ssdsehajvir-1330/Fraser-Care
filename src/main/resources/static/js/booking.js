@@ -86,6 +86,28 @@ function showPlaceholder(message) {
     timeSlots.appendChild(paragraph);
 }
 
+// Provide access to the waitlist for the selected service and date
+function showWaitlistLink() {
+    if (!selectedService || !appointmentDate.value) {
+        return;
+    }
+
+    const params = new URLSearchParams({
+        serviceId: selectedService.serviceId,
+        date: appointmentDate.value
+    });
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Preferred time unavailable? ";
+
+    const link = document.createElement("a");
+    link.href = `/waitlist.html?${params.toString()}`;
+    link.textContent = "Join the waitlist";
+
+    paragraph.appendChild(link);
+    timeSlots.appendChild(paragraph);
+}
+
 async function loadServices() {
     try {
         const response = await fetch("/api/pharmacy-services", {
@@ -167,6 +189,7 @@ async function loadAvailableTimes() {
 
         if (availableTimes.length === 0) {
             showPlaceholder("No available appointments for this date.");
+            showWaitlistLink();
             return;
         }
 
@@ -189,6 +212,9 @@ async function loadAvailableTimes() {
 
             timeSlots.appendChild(button);
         });
+
+        // Customers can join a waitlist if their preferred time is taken
+        showWaitlistLink();
 
     } catch (error) {
         showPlaceholder(error.message);

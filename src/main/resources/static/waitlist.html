@@ -1,17 +1,36 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waitlist - FraserCare</title>
-    <link rel="stylesheet" href="waitlist.css">
-    <script src="waitlist.js" defer></script>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/waitlist.css">
+
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/waitlist.js" defer></script>
 </head>
 
 <body>
 
-<header>
-    <h1>FraserCare</h1>
+<header class="site-header">
+    <a href="/" class="logo">FraserCare</a>
+
+    <nav>
+        <a href="/#booking">Book Appointment</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/customer-home.html">My Account</a>
+
+        <span>
+            Hi, <strong class="user-name"></strong>
+        </span>
+
+        <form class="logout-form" action="/logout" method="post">
+            <button type="submit">Log out</button>
+        </form>
+    </nav>
 </header>
 
 <main>
@@ -31,14 +50,10 @@
 
         <form id="waitlistForm">
 
-            <label for="serviceId">Pharmacy Service ID</label>
-            <input
-                type="number"
-                id="serviceId"
-                min="1"
-                step="1"
-                required
-            >
+            <label for="serviceId">Pharmacy Service</label>
+            <select id="serviceId" required>
+                <option value="">Loading services...</option>
+            </select>
 
             <label for="appointmentDate">Appointment Date</label>
             <input

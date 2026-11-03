@@ -96,3 +96,12 @@ button:disabled {
 [hidden] {
     display: none !important;
 }
+
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccd5da;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 15px;
+}
