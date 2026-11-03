@@ -1,3 +1,4 @@
+
 package com.cmpt276.frasercare.service;
 
 import com.cmpt276.frasercare.model.WaitlistEntry;
@@ -7,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WaitlistServiceTest {
@@ -42,7 +45,9 @@ class WaitlistServiceTest {
     @Test
     void joinWaitlist_pastDate_throwsException() {
         WaitlistEntry entry = createValidEntry();
-        entry.setAppointmentDate(LocalDate.now().minusDays(1));
+        entry.setAppointmentDate(
+            LocalDate.now(ZoneId.of("America/Vancouver")).minusDays(1)
+        );
 
         assertThrows(IllegalArgumentException.class,
             () -> waitlistService.joinWaitlist(entry));
@@ -99,13 +104,55 @@ class WaitlistServiceTest {
         Mockito.verify(waitlistRepository).save(entry);
     }
 
+    // Test 6: Reject duplicate waitlist registration
+    @Test
+    void joinWaitlist_duplicateRegistration_throwsException() {
+        WaitlistEntry entry = createValidEntry();
+
+        // Existing WAITING entry for the same customer and slot
+        WaitlistEntry existingEntry = createValidEntry();
+        existingEntry.setStatus("WAITING");
+
+        Mockito.when(appointmentBookingService.isWaitlistEligibleSlot(
+            entry.getServiceId(),
+            entry.getAppointmentDate(),
+            entry.getStartTime(),
+            entry.getEndTime()
+        )).thenReturn(true);
+
+        Mockito.when(
+            waitlistRepository
+                .findByServiceIdAndAppointmentDateAndStartTimeOrderByJoinedAtAscWaitlistIdAsc(
+                    entry.getServiceId(),
+                    entry.getAppointmentDate(),
+                    entry.getStartTime()
+                )
+        ).thenReturn(List.of(existingEntry));
+
+        IllegalStateException exception = assertThrows(
+            IllegalStateException.class,
+            () -> waitlistService.joinWaitlist(entry)
+        );
+
+        assertEquals(
+            "Customer is already on this waitlist.",
+            exception.getMessage()
+        );
+
+        // Verify that duplicate registration does not save another entry
+        Mockito.verify(waitlistRepository, Mockito.never())
+            .save(Mockito.any(WaitlistEntry.class));
+    }
+
     // Helper to create valid test data
     private WaitlistEntry createValidEntry() {
         WaitlistEntry entry = new WaitlistEntry();
 
         entry.setCustomerId(1L);
         entry.setServiceId(1L);
-        entry.setAppointmentDate(LocalDate.now().plusDays(1));
+        entry.setAppointmentDate(
+            LocalDate.now(ZoneId.of("America/Vancouver")).plusDays(1)
+        );
         entry.setStartTime(LocalTime.of(14, 0));
         entry.setEndTime(LocalTime.of(14, 15));
 

@@ -5,6 +5,7 @@ import com.cmpt276.frasercare.repository.WaitlistRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -49,8 +50,9 @@ public class WaitlistService {
             );
         }
 
-        // Reject past dates
-        if (entry.getAppointmentDate().isBefore(LocalDate.now())) {
+        // Reject past dates using Vancouver time
+        if (entry.getAppointmentDate().isBefore(
+                LocalDate.now(ZoneId.of("America/Vancouver")))) {
             throw new IllegalArgumentException(
                 "Cannot join a waitlist for a past date."
             );
