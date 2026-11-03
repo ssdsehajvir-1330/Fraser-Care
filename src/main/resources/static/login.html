@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,31 +54,81 @@
         button:hover {
             background: #106747;
         }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="login-box">
         <h1>FraserCare</h1>
         <p style="text-align:center;">Sign in to your account</p>
 
+        <p id="message" role="alert" style="color:red;text-align:center;"></p>
+
         <form action="/login" method="post">
-            <input type="text" name="username"
-                   placeholder="Username" required>
+            <input type="email"
+                   name="username"
+                   placeholder="Email Address"
+                   autocomplete="username"
+                   required>
 
-            <input type="password" name="password"
-                   placeholder="Password" required>
+            <input type="password"
+                   name="password"
+                   placeholder="Password"
+                   autocomplete="current-password"
+                   required>
 
-            <button type="submit">Login</button>
+            <button type="submit" disabled>Login</button>
         </form>
 
-        <p style="text-align: center; margin-top: 20px;">
+        <p style="text-align:center;margin-top:20px;">
             Don't have an account?
-            <a href="/signup.html" style="color: #16805d;">
-                Sign Up
-            </a>
+            <a href="/signup.html" style="color:#16805d;">Sign Up</a>
         </p>
     </div>
+
+    <script>
+        const form = document.querySelector("form");
+        const button = form.querySelector("button");
+        const message = document.getElementById("message");
+
+        if (window.location.search.includes("error")) {
+            message.textContent = "Invalid email or password.";
+        }
+
+        fetch("/csrf")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Could not retrieve CSRF token.");
+                }
+                return response.json();
+            })
+            .then(csrf => {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "_csrf";
+                input.value = csrf.token;
+
+                form.appendChild(input);
+                button.disabled = false;
+            })
+            .catch(error => {
+                message.textContent =
+                    "Unable to initialize login. Please refresh.";
+
+                console.error(error);
+            });
+
+        form.addEventListener("submit", function() {
+            const email = form.querySelector('[name="username"]');
+            email.value = email.value.trim().toLowerCase();
+        });
+    </script>
 
 </body>
 </html>
