@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +6,7 @@
     <title>Waitlist - FraserCare</title>
 
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/nav.css">
     <link rel="stylesheet" href="/css/waitlist.css">
 
     <script src="/js/auth.js" defer></script>
@@ -15,23 +15,8 @@
 
 <body>
 
-<header class="site-header">
-    <a href="/" class="logo">FraserCare</a>
-
-    <nav>
-        <a href="/#booking">Book Appointment</a>
-        <a href="/#how-it-works">How It Works</a>
-        <a href="/customer-home.html">My Account</a>
-
-        <span>
-            Hi, <strong class="user-name"></strong>
-        </span>
-
-        <form class="logout-form" action="/logout" method="post">
-            <button type="submit">Log out</button>
-        </form>
-    </nav>
-</header>
+<!-- Shared top navigation (filled in by auth.js) -->
+<div id="site-nav"></div>
 
 <main>
     <h2>Join Appointment Waitlist</h2>
@@ -104,6 +89,10 @@
         <div id="errorMessage" class="error" role="alert" hidden></div>
     </section>
 </main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => renderSiteNav());
+</script>
 
 </body>
 </html>
