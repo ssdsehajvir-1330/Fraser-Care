@@ -1,0 +1,98 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f9;
+    margin: 0;
+    color: #263238;
+}
+
+header {
+    background-color: #087e8b;
+    color: white;
+    padding: 20px 40px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+main {
+    max-width: 650px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px #00000015;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccd5da;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 15px;
+}
+
+.status {
+    color: #b42318;
+    font-weight: bold;
+}
+
+button {
+    background-color: #087e8b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #065f69;
+}
+
+button:disabled {
+    background-color: #94a3a8;
+    cursor: not-allowed;
+}
+
+.confirmation {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e3f6e8;
+    border: 1px solid #80c99a;
+    border-radius: 6px;
+}
+
+.error {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fde8e8;
+    border: 1px solid #e8a0a0;
+    border-radius: 6px;
+    color: #9b1c1c;
+}
+
+.note {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Keep hidden confirmation and error messages invisible */
+[hidden] {
+    display: none !important;
+}
