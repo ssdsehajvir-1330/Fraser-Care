@@ -63,6 +63,42 @@ Development will take place over multiple iterations. The first iteration will e
 
 By the end of the project, the group aims to deliver a functional demonstration of a pharmacy management platform that combines multiple useful features into one accessible website.
 
+## Database Setup
+
+FraserCare uses PostgreSQL to store pharmacy services and appointment bookings.
+
+### Prerequisites
+- PostgreSQL installed and running.
+- A PostgreSQL database named `frasercare_dev`.
+
+### Setup Instructions
+
+1. Create the database if it does not already exist:
+
+```sql
+CREATE DATABASE frasercare_dev;
+```
+
+2. From the project root, execute the database schema:
+
+```bash
+psql -U postgres -h localhost -p 5432 -d frasercare_dev -f database/schema.sql
+```
+
+3. Configure the following environment variables:
+
+- `DB_URL` (optional; defaults to `jdbc:postgresql://localhost:5432/frasercare_dev`)
+- `DB_USER` (optional; defaults to `postgres`)
+- `DB_PASSWORD` (required; your PostgreSQL password)
+
+4. Start the Spring Boot application:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Do not commit database passwords or other credentials to Git.
+
 ## Group Members' Backgrounds and Experience
 
 Our group consists of five students with different levels of experience in software development, programming, and collaborative projects. We plan to use each member's strengths while giving everyone opportunities to develop new technical skills.

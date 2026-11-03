@@ -25,6 +25,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .anyRequest().authenticated()
             )
+<<<<<<< HEAD
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/self-check/**")
             )
@@ -43,6 +44,10 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             );
+=======
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/self-check/**"))
+            .formLogin(Customizer.withDefaults());
+>>>>>>> origin/main
 
         return http.build();
     }

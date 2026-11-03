@@ -1,3 +1,4 @@
+
 -- FraserCare database schema
 
 CREATE TABLE IF NOT EXISTS pharmacy_services (
@@ -7,7 +8,6 @@ CREATE TABLE IF NOT EXISTS pharmacy_services (
     duration_minutes INTEGER NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE
 );
-
 
 -- Initial pharmacy services
 
@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS appointments (
     CHECK (end_time > start_time)
 );
 
-
 -- Authentication users
 
 CREATE TABLE IF NOT EXISTS auth_users (
@@ -50,4 +49,3 @@ CREATE TABLE IF NOT EXISTS auth_authorities (
     authority VARCHAR(50) NOT NULL,
     PRIMARY KEY (username, authority)
 );
-
