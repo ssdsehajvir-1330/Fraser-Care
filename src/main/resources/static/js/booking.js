@@ -215,7 +215,8 @@ appointmentDate.addEventListener("change", () => {
     loadAvailableTimes();
 });
 
-bookingForm.addEventListener("submit", event => {
+
+bookingForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     if (!selectedService || !appointmentDate.value || !selectedTime) {
@@ -233,10 +234,52 @@ bookingForm.addEventListener("submit", event => {
         )
     };
 
-    showMessage(
-        "Your appointment details are ready. Booking confirmation will be available once customer authentication is connected."
+    bookButton.disabled = true;
+    showMessage("Booking your appointment...");
+
+    try {
+        const csrfResponse = await fetch("/csrf");
+
+        if (!csrfResponse.ok) {
+            throw new Error("Unable to verify your session. Please log in again.");
+        }
+
+        const csrf = await csrfResponse.json();
+
+        const response = await fetch("/api/appointments", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                [csrf.headerName]: csrf.token
+            },
+            body: JSON.stringify(appointmentDetails)
+        });
+
+        if (response.status === 401 || response.redirected) {
+            throw new Error("Please log in as a customer before booking.");
+        }
+
+        if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(errorMessage || "Unable to book appointment.");
+        }
+
+        const bookedAppointment = await response.json();
+
+        await loadAvailableTimes();
+
+        showMessage(
+        `Appointment booked successfully! Confirmation #${bookedAppointment.appointmentId}`
     );
+
+    } catch (error) {
+        showMessage(error.message, true);
+    } finally {
+        updateSummary();
+    }
 });
+
 
 appointmentDate.min = getTodayDate();
 
