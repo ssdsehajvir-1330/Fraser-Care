@@ -6,6 +6,33 @@
     <title>FraserCare | Book an Appointment</title>
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/booking.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+
+    <style>
+        /* Login / logout links in the header */
+        .auth-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .auth-links form {
+            display: inline;
+        }
+
+        .auth-links button {
+            background: none;
+            border: 1px solid currentColor;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -15,6 +42,21 @@
         <nav>
             <a href="#booking">Book Appointment</a>
             <a href="#how-it-works">How It Works</a>
+
+            <!-- Shown when nobody is logged in -->
+            <span id="logged-out" class="auth-links">
+                <a href="/login.html">Login</a>
+                <a href="/signup.html">Sign Up</a>
+            </span>
+
+            <!-- Shown when a user is logged in -->
+            <span id="logged-in" class="auth-links" hidden>
+                <span>Hi, <strong class="user-name"></strong></span>
+                <a id="my-page" href="/">My page</a>
+                <form class="logout-form" action="/logout" method="post">
+                    <button type="submit">Log out</button>
+                </form>
+            </span>
         </nav>
     </header>
 
@@ -126,6 +168,23 @@
     <footer>
         <p>FraserCare | CMPT 276 Group Project</p>
     </footer>
+
+    <script>
+        // Swap the Login / Sign Up links for the user's name and Log out
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = await getCurrentUser();
+
+            if (!user) {
+                return;
+            }
+
+            document.getElementById("logged-out").hidden = true;
+            document.getElementById("logged-in").hidden = false;
+            document.getElementById("my-page").href = landingPageFor(user);
+
+            await setUpLoggedInPage();
+        });
+    </script>
 
 </body>
 </html>
