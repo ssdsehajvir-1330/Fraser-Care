@@ -1,4 +1,3 @@
-
 -- FraserCare database schema
 
 CREATE TABLE IF NOT EXISTS pharmacy_services (

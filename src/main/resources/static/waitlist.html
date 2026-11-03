@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waitlist - FraserCare</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/nav.css">
+    <link rel="stylesheet" href="/css/waitlist.css">
+
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/waitlist.js" defer></script>
+</head>
+
+<body>
+
+<!-- Shared top navigation (filled in by auth.js) -->
+<div id="site-nav"></div>
+
+<main>
+    <h2>Join Appointment Waitlist</h2>
+    <p>
+        Join the waitlist when your preferred appointment
+        slot is fully booked.
+    </p>
+
+    <section class="card">
+        <h3>Appointment Details</h3>
+
+        <p class="note">
+            Enter the details of an existing booked appointment.
+            The system will check whether the slot is eligible.
+        </p>
+
+        <form id="waitlistForm">
+
+            <label for="serviceId">Pharmacy Service</label>
+            <select id="serviceId" required>
+                <option value="">Loading services...</option>
+            </select>
+
+            <label for="appointmentDate">Appointment Date</label>
+            <input
+                type="date"
+                id="appointmentDate"
+                required
+            >
+
+            <label for="startTime">Start Time</label>
+            <input
+                type="time"
+                id="startTime"
+                step="900"
+                required
+            >
+
+            <label for="endTime">End Time</label>
+            <input
+                type="time"
+                id="endTime"
+                step="900"
+                required
+            >
+
+            <p class="note">
+                Appointment slots must follow pharmacy hours
+                (9 AM to 5 PM), service duration, and
+                15-minute start intervals.
+            </p>
+
+            <button type="submit" id="joinButton">
+                Join Waitlist
+            </button>
+        </form>
+
+        <p id="loadingMessage" class="note" hidden>
+            Submitting waitlist request...
+        </p>
+
+        <div id="confirmation" class="confirmation" hidden>
+            <strong>You have been added to the waitlist.</strong>
+            <p>
+                <strong>Status:</strong>
+                <span id="waitlistStatus">WAITING</span>
+            </p>
+        </div>
+
+        <div id="errorMessage" class="error" role="alert" hidden></div>
+    </section>
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => renderSiteNav());
+</script>
+
+</body>
+</html>
