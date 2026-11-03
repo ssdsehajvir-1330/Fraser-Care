@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drug Product Search | FraserCare</title>
     <link rel="stylesheet" href="/css/drug-search.css">
+    <link rel="stylesheet" href="/css/nav.css">
 </head>
 <body>
+    <div id="site-nav"></div>
+
     <main>
         <h1>Drug Product Search</h1>
         <p class="notice">Search Canadian drug products by brand name or DIN (the 8-digit number on the package).</p>
@@ -37,5 +40,7 @@
         <p class="source">Data from Health Canada's Drug Product Database. This is product information only, not medical advice.</p>
     </main>
     <script src="/js/drug-search.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>renderSiteNav();</script>
 </body>
 </html>

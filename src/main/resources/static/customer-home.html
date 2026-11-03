@@ -6,41 +6,31 @@
     <title>My Account | FraserCare</title>
 
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/nav.css">
     <script src="/js/auth.js" defer></script>
 </head>
 <body>
-    <header>
-        <h2>FraserCare</h2>
-
-        <div class="header-right">
-            <span>Logged in as <strong class="user-name"></strong></span>
-
-            <form class="logout-form" action="/logout" method="post">
-                <button type="submit">Log out</button>
-            </form>
-        </div>
-    </header>
+    <!-- Shared top nav (filled in by auth.js) -->
+    <div id="site-nav"></div>
 
     <main>
         <section class="card">
             <h1>Welcome, <span class="user-name"></span></h1>
-            <p class="muted">This is your customer home page.</p>
+            <p class="muted">Customer home page.</p>
         </section>
 
         <section class="card">
             <h2>What you can do</h2>
             <ul>
-                <li>Browse pharmacy services and book an appointment</li>
-                <li>Join a waitlist when a time is full</li>
-                <li>Take the self-check to find the right service</li>
-                <li>Search Canadian drug products</li>
+                <li><a href="/#booking">Book an appointment</a></li>
+                <li><a href="/self-check.html">Take the self-check</a> to find the right service</li>
+                <li><a href="/drug-search.html">Search Canadian drug products</a></li>
             </ul>
-            <p class="muted">Links to each feature are added here as they are merged.</p>
         </section>
     </main>
 
     <script>
-        document.addEventListener("DOMContentLoaded", setUpLoggedInPage);
+        document.addEventListener("DOMContentLoaded", renderSiteNav);
     </script>
 </body>
 </html>

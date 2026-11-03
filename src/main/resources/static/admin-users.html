@@ -6,20 +6,12 @@
     <title>All Users | FraserCare Admin</title>
 
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/nav.css">
     <script src="/js/auth.js" defer></script>
 </head>
 <body>
-    <header>
-        <h2>FraserCare Admin</h2>
-
-        <div class="header-right">
-            <span>Logged in as <strong class="user-name"></strong></span>
-
-            <form class="logout-form" action="/logout" method="post">
-                <button type="submit">Log out</button>
-            </form>
-        </div>
-    </header>
+    <!-- Shared top nav (filled in by auth.js) -->
+    <div id="site-nav"></div>
 
     <main>
         <section class="card">
@@ -102,7 +94,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            setUpLoggedInPage();
+            renderSiteNav();
             loadUsers();
         });
     </script>
