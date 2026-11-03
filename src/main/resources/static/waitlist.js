@@ -14,9 +14,6 @@ form.addEventListener("submit", async function(event) {
     joinButton.disabled = true;
 
     const entry = {
-        customerId: Number(
-            document.getElementById("customerId").value
-        ),
         serviceId: Number(
             document.getElementById("serviceId").value
         ),
@@ -29,8 +26,8 @@ form.addEventListener("submit", async function(event) {
     };
 
     try {
-        // Get CSRF token from Spring Security
-        const csrfResponse = await fetch("/api/waitlist/csrf");
+        // Get CSRF token from the existing authentication system
+        const csrfResponse = await fetch("/csrf");
 
         if (!csrfResponse.ok) {
             throw new Error("Could not obtain CSRF token.");
@@ -38,7 +35,7 @@ form.addEventListener("submit", async function(event) {
 
         const csrfData = await csrfResponse.json();
 
-        // Submit waitlist entry with CSRF token
+        // Submit the request as the logged-in customer
         const response = await fetch("/api/waitlist", {
             method: "POST",
             headers: {

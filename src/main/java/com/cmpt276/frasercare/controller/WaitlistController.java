@@ -3,8 +3,11 @@ package com.cmpt276.frasercare.controller;
 import com.cmpt276.frasercare.model.WaitlistEntry;
 import com.cmpt276.frasercare.service.WaitlistService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
@@ -14,9 +17,13 @@ import java.util.Map;
 public class WaitlistController {
 
     private final WaitlistService waitlistService;
+    private final JdbcTemplate jdbc;
 
-    public WaitlistController(WaitlistService waitlistService) {
+    public WaitlistController(
+            WaitlistService waitlistService,
+            JdbcTemplate jdbc) {
         this.waitlistService = waitlistService;
+        this.jdbc = jdbc;
     }
 
     // Provide CSRF token to the authenticated frontend
@@ -40,7 +47,50 @@ public class WaitlistController {
 
     // Customer joins a waitlist
     @PostMapping
-    public ResponseEntity<?> joinWaitlist(@RequestBody WaitlistEntry entry) {
+    public ResponseEntity<?> joinWaitlist(
+            @RequestBody WaitlistEntry entry,
+            Authentication authentication) {
+
+        // Require a logged-in customer
+        if (authentication == null ||
+            authentication.getAuthorities().stream()
+                .noneMatch(authority ->
+                    "ROLE_CUSTOMER".equals(authority.getAuthority()))) {
+
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Customer login required.");
+        }
+
+        if (entry == null) {
+            return ResponseEntity
+                .badRequest()
+                .body("Missing required waitlist information.");
+        }
+
+        // Get customer ID from the authenticated account
+        Long customerId;
+
+        try {
+            customerId = jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                authentication.getName()
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Customer account not found.");
+        }
+
+        if (customerId == null) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Customer ID unavailable.");
+        }
+
+        // Never trust a customer ID provided by the browser
+        entry.setCustomerId(customerId);
 
         try {
             WaitlistEntry savedEntry =
