@@ -1,11 +1,14 @@
 
 package com.cmpt276.frasercare;
 
+import java.util.Set;
+
 import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -14,15 +17,35 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+    // Where each role goes after logging in
+    public static final String CUSTOMER_HOME = "/customer-home.html";
+    public static final String STAFF_HOME = "/staff-dashboard.html";
+    public static final String ADMIN_HOME = "/admin-users.html";
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+                // Public pages
                 .requestMatchers(
                     "/", "/index.html", "/login.html", "/signup.html",
-                    "/favicon.ico", "/css/**", "/js/**",
-                    "/api/register", "/csrf"
+                    "/favicon.ico", "/css/**", "/js/**", "/error",
+                    "/api/register", "/api/me", "/csrf"
                 ).permitAll()
+
+                // Admin only
+                .requestMatchers(ADMIN_HOME, "/api/admin/**")
+                    .hasRole("ADMIN")
+
+                // Staff (admins can see it too)
+                .requestMatchers(STAFF_HOME, "/api/staff/**")
+                    .hasAnyRole("STAFF", "ADMIN")
+
+                // Customer only
+                .requestMatchers(CUSTOMER_HOME)
+                    .hasRole("CUSTOMER")
+
+                // Everything else just needs a login
                 .anyRequest().authenticated()
             )
             .csrf(csrf -> csrf
@@ -31,7 +54,11 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login.html")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/", true)
+                .successHandler((request, response, authentication) ->
+                    response.sendRedirect(landingPageFor(
+                        AuthorityUtils.authorityListToSet(
+                            authentication.getAuthorities())))
+                )
                 .failureUrl("/login.html?error")
                 .permitAll()
             )
@@ -45,6 +72,19 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    // Picks the landing page for a user's roles
+    public static String landingPageFor(Set<String> roles) {
+        if (roles.contains("ROLE_ADMIN")) {
+            return ADMIN_HOME;
+        }
+
+        if (roles.contains("ROLE_STAFF")) {
+            return STAFF_HOME;
+        }
+
+        return CUSTOMER_HOME;
     }
 
     @Bean
@@ -66,7 +106,8 @@ public class SecurityConfig {
         );
 
         manager.setUserExistsSql(
-            "SELECT username FROM auth_users WHERE username = ?"
+            // Spring Security 7 expects a count here, not a row
+            "SELECT COUNT(*) FROM auth_users WHERE username = ?"
         );
 
         manager.setCreateUserSql(

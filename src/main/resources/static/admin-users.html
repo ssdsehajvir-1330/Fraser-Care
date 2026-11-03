@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Users | FraserCare Admin</title>
+
+    <link rel="stylesheet" href="/css/auth.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body>
+    <header>
+        <h2>FraserCare Admin</h2>
+
+        <div class="header-right">
+            <span>Logged in as <strong class="user-name"></strong></span>
+
+            <form class="logout-form" action="/logout" method="post">
+                <button type="submit">Log out</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <section class="card">
+            <h1>All Users</h1>
+            <p class="muted">Every account and its role.</p>
+
+            <p id="message" class="muted">Loading users...</p>
+
+            <div class="table-container">
+                <table id="users-table" hidden>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-rows"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function loadUsers() {
+            const message = document.getElementById("message");
+            const table = document.getElementById("users-table");
+            const rows = document.getElementById("user-rows");
+
+            try {
+                const response = await fetch("/api/admin/users", {
+                    headers: { "Accept": "application/json" },
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Could not load users (status " + response.status + ").");
+                }
+
+                const users = await response.json();
+
+                if (users.length === 0) {
+                    message.textContent = "No users found.";
+                    return;
+                }
+
+                users.forEach(user => {
+                    const row = document.createElement("tr");
+
+                    const idCell = document.createElement("td");
+                    idCell.textContent = user.userId;
+
+                    const nameCell = document.createElement("td");
+                    nameCell.textContent = user.fullName || "-";
+
+                    const emailCell = document.createElement("td");
+                    emailCell.textContent = user.email;
+
+                    const roleCell = document.createElement("td");
+                    user.roles.forEach(role => {
+                        const badge = document.createElement("span");
+                        badge.className = "role";
+                        badge.textContent = role;
+                        roleCell.appendChild(badge);
+                    });
+
+                    row.append(idCell, nameCell, emailCell, roleCell);
+                    rows.appendChild(row);
+                });
+
+                message.hidden = true;
+                table.hidden = false;
+
+            } catch (error) {
+                console.error(error);
+                message.className = "error";
+                message.textContent = error.message;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setUpLoggedInPage();
+            loadUsers();
+        });
+    </script>
+</body>
+</html>

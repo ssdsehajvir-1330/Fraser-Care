@@ -177,7 +177,11 @@
 
                     if (response.ok) {
                         form.reset();
-                        window.location.href = "/login.html";
+
+                        // Let the success message show before redirecting
+                        setTimeout(() => {
+                            window.location.href = "/login.html";
+                        }, 1200);
                     }
 
                 } catch (error) {

@@ -13,6 +13,11 @@ import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -43,7 +48,44 @@ public class AuthController {
             "token", token.getToken(),
             "headerName", token.getHeaderName()
         );
-}
+    }
+
+    // Returns the logged-in user, or 401 if nobody is logged in
+    @GetMapping("/api/me")
+    public ResponseEntity<Map<String, Object>> currentUser(
+            Authentication authentication) {
+
+        if (authentication == null ||
+            authentication instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String email = authentication.getName();
+
+        Map<String, Object> user;
+
+        try {
+            user = jdbc.queryForMap(
+                "SELECT user_id, full_name FROM auth_users WHERE username = ?",
+                email
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<String> roles = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .toList();
+
+        Object fullName = user.get("full_name");
+
+        return ResponseEntity.ok(Map.of(
+            "userId", user.get("user_id"),
+            "email", email,
+            "fullName", fullName == null ? "" : fullName,
+            "roles", roles
+        ));
+    }
 
     @PostMapping("/api/register")
     @Transactional
