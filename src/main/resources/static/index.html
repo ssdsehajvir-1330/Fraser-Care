@@ -3,46 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FraserCare</title>
-
+    <title>FraserCare | Book an Appointment</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/booking.js" defer></script>
     <script src="/js/auth.js" defer></script>
 
     <style>
-        nav {
+        /* Login / logout links in the header */
+        .auth-links {
             display: flex;
-            gap: 12px;
             align-items: center;
-            justify-content: flex-end;
+            gap: 20px;
         }
 
-        nav form {
+        .auth-links form {
             display: inline;
+        }
+
+        .auth-links button {
+            background: none;
+            border: 1px solid currentColor;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        [hidden] {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <nav>
-        <!-- Shown when nobody is logged in -->
-        <span id="logged-out">
-            <a href="/login.html">Login</a>
-            <a href="/signup.html">Sign Up</a>
-        </span>
 
-        <!-- Shown when a user is logged in -->
-        <span id="logged-in" hidden>
-            Logged in as <strong class="user-name"></strong>
-            <a id="my-page" href="/">My page</a>
-            <form class="logout-form" action="/logout" method="post">
-                <button type="submit">Log out</button>
-            </form>
-        </span>
-    </nav>
+    <header class="site-header">
+        <a href="/" class="logo">FraserCare</a>
 
-    <h1>Welcome to FraserCare</h1>
-    <p>Pharmacy Service Management Platform</p>
-    <p>CMPT 276 Group Project</p>
+        <nav>
+            <a href="#booking">Book Appointment</a>
+            <a href="#how-it-works">How It Works</a>
+
+            <!-- Shown when nobody is logged in -->
+            <span id="logged-out" class="auth-links">
+                <a href="/login.html">Login</a>
+                <a href="/signup.html">Sign Up</a>
+            </span>
+
+            <!-- Shown when a user is logged in -->
+            <span id="logged-in" class="auth-links" hidden>
+                <span>Hi, <strong class="user-name"></strong></span>
+                <a id="my-page" href="/">My page</a>
+                <form class="logout-form" action="/logout" method="post">
+                    <button type="submit">Log out</button>
+                </form>
+            </span>
+        </nav>
+    </header>
+
+    <main>
+
+        <section class="hero">
+            <p class="eyebrow">YOUR HEALTH, OUR PRIORITY</p>
+
+            <h1>Pharmacy care made simple.</h1>
+
+            <p>
+                Book your pharmacy appointment quickly and easily.
+                Choose a service, find an available time, and book online.
+            </p>
+
+            <a href="#booking" class="primary-button">
+                Book an Appointment
+            </a>
+        </section>
+
+        <section class="booking-section" id="booking">
+
+            <div class="section-heading">
+                <p class="eyebrow">ONLINE BOOKING</p>
+                <h2>Schedule your appointment</h2>
+                <p>Select your preferred pharmacy service and appointment time.</p>
+            </div>
+
+            <div class="booking-container">
+
+                <form id="bookingForm">
+
+                    <div class="form-group">
+                        <label for="serviceSelect">1. Choose a pharmacy service</label>
+
+                        <select id="serviceSelect" required>
+                            <option value="">Select a service</option>
+                        </select>
+
+                        <p id="serviceDescription">
+                            Choose a service to see its details.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appointmentDate">2. Choose a date</label>
+
+                        <input
+                            type="date"
+                            id="appointmentDate"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label>3. Choose an available time</label>
+
+                        <div id="timeSlots" class="time-slots">
+                            <p>Select a service and date first.</p>
+                        </div>
+                    </div>
+
+                    <p id="bookingMessage" role="status"></p>
+
+                    <button type="submit" id="bookButton" disabled>
+                        Continue to Booking
+                    </button>
+
+                </form>
+
+                <aside class="booking-summary">
+
+                    <h3>Appointment Summary</h3>
+
+                    <div class="summary-item">
+                        <span>Service</span>
+                        <strong id="summaryService">Not selected</strong>
+                    </div>
+
+                    <div class="summary-item">
+                        <span>Date</span>
+                        <strong id="summaryDate">Not selected</strong>
+                    </div>
+
+                    <div class="summary-item">
+                        <span>Time</span>
+                        <strong id="summaryTime">Not selected</strong>
+                    </div>
+
+                    <p>
+                        Review your selections before confirming
+                        your appointment.
+                    </p>
+
+                </aside>
+
+            </div>
+        </section>
+
+        <section class="how-it-works" id="how-it-works">
+            <h2>How It Works</h2>
+
+            <p>Choose your service, select an available time,
+                and arrange your pharmacy appointment.</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>FraserCare | CMPT 276 Group Project</p>
+    </footer>
 
     <script>
+        // Swap the Login / Sign Up links for the user's name and Log out
         document.addEventListener("DOMContentLoaded", async () => {
             const user = await getCurrentUser();
 
@@ -57,5 +185,6 @@
             await setUpLoggedInPage();
         });
     </script>
+
 </body>
 </html>
