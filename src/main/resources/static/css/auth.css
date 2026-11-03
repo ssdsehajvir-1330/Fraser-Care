@@ -1,0 +1,102 @@
+/* Shared styles for the customer home and admin pages */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7f6;
+    color: #26332f;
+    margin: 0;
+}
+
+header {
+    background: #16805d;
+    color: white;
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+header h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logout-form button {
+    background: white;
+    color: #16805d;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.logout-form button:hover {
+    background: #e1f4e9;
+}
+
+main {
+    max-width: 1000px;
+    margin: 36px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e1e8e4;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.muted {
+    color: #69766f;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #e8eeea;
+}
+
+th {
+    background: #f5f7f6;
+    color: #52635a;
+    font-size: 13px;
+}
+
+.role {
+    display: inline-block;
+    background: #e1f4e9;
+    color: #16805d;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.error {
+    color: #b42318;
+}

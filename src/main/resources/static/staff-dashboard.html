@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | FraserCare</title>
+
+    <link rel="stylesheet" href="css/staff-dashboard.css">
+    <script src="js/staff-dashboard.js" defer></script>
+</head>
+
+<body>
+
+<header>
+    <h2>FraserCare</h2>
+    <span>Pharmacy Staff Portal</span>
+
+    <form action="/logout" method="post" class="logout-form">
+        <button type="submit">Logout</button>
+    </form>
+</header>
+
+    <main>
+
+        <section class="welcome">
+            <h1>Staff Dashboard</h1>
+            <p id="today-date"></p>
+        </section>
+
+        <section class="summary">
+            <h3>APPOINTMENTS ON SELECTED DATE</h3>
+            <h2 id="appointment-count">0</h2>
+        </section>
+
+        <section class="appointments">
+
+            <h2>Appointment Schedule</h2>
+            <p>View scheduled appointments for the selected date.</p>
+
+           <!-- Loading and error messages -->
+            <div class="feedback-message" id="feedback-message" hidden>
+            </div>
+
+            <div class="date-filter">
+                <label for="appointment-date">Select date:</label>
+                <input type="date" id="appointment-date">
+            </div>
+
+            <div class="table-container" id="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Customer</th>
+                            <th>Pharmacy Service</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="appointment-rows">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" id="empty-state" hidden>
+                <h3>No appointments on this date</h3>
+                <p>There are currently no appointments scheduled for the selected date.</p>
+            </div>
+
+        </section>
+
+    </main>
+
+<script src="js/auth.js"></script>
+
+<script>
+    setUpLoggedInPage();
+</script>
+
+</body>
+</html>

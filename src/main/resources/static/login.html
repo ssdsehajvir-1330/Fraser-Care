@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FraserCare - Login</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf5f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            width: 350px;
+            max-width: calc(100% - 48px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #00000015;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #16805d;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #16805d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #106747;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+        <h1>FraserCare</h1>
+        <p style="text-align:center;">Sign in to your account</p>
+
+        <p id="message" role="alert" style="color:red;text-align:center;"></p>
+
+        <form action="/login" method="post">
+            <input type="email"
+                   name="username"
+                   placeholder="Email Address"
+                   autocomplete="username"
+                   required>
+
+            <input type="password"
+                   name="password"
+                   placeholder="Password"
+                   autocomplete="current-password"
+                   required>
+
+            <button type="submit" disabled>Login</button>
+        </form>
+
+        <p style="text-align:center;margin-top:20px;">
+            Don't have an account?
+            <a href="/signup.html" style="color:#16805d;">Sign Up</a>
+        </p>
+    </div>
+
+    <script>
+        const form = document.querySelector("form");
+        const button = form.querySelector("button");
+        const message = document.getElementById("message");
+
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.has("error")) {
+            message.textContent = "Invalid email or password.";
+        } else if (params.has("logout")) {
+            message.style.color = "green";
+            message.textContent = "You have been logged out.";
+        }
+
+        fetch("/csrf")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Could not retrieve CSRF token.");
+                }
+                return response.json();
+            })
+            .then(csrf => {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "_csrf";
+                input.value = csrf.token;
+
+                form.appendChild(input);
+                button.disabled = false;
+            })
+            .catch(error => {
+                message.textContent =
+                    "Unable to initialize login. Please refresh.";
+
+                console.error(error);
+            });
+
+        form.addEventListener("submit", function() {
+            const email = form.querySelector('[name="username"]');
+            email.value = email.value.trim().toLowerCase();
+        });
+    </script>
+
+</body>
+</html>
