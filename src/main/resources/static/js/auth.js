@@ -61,3 +61,98 @@ async function setUpLoggedInPage() {
 
     return user;
 }
+
+// Links shown in the top nav for each type of user
+function navLinksFor(user) {
+    if (!user) {
+        return [
+            ["Book Appointment", "/#booking"],
+            ["Login", "/login.html"],
+            ["Sign Up", "/signup.html"]
+        ];
+    }
+
+    if (user.roles.includes("ROLE_ADMIN")) {
+        return [
+            ["Users", "/admin-users.html"],
+            ["Staff Dashboard", "/staff-dashboard.html"],
+            ["Drug Search", "/drug-search.html"]
+        ];
+    }
+
+    if (user.roles.includes("ROLE_STAFF")) {
+        return [
+            ["Staff Dashboard", "/staff-dashboard.html"],
+            ["Drug Search", "/drug-search.html"]
+        ];
+    }
+
+    return [
+        ["My Account", "/customer-home.html"],
+        ["Book Appointment", "/#booking"],
+        ["Self-Check", "/self-check.html"],
+        ["Drug Search", "/drug-search.html"]
+    ];
+}
+
+// Builds the top nav inside <div id="site-nav"></div>.
+// Shows the right links for the user, their name and a Log out button.
+async function renderSiteNav() {
+    const container = document.getElementById("site-nav");
+    const user = await getCurrentUser();
+
+    if (container) {
+        container.className = "site-nav";
+        container.replaceChildren();
+
+        const logo = document.createElement("a");
+        logo.href = "/";
+        logo.className = "nav-logo";
+        logo.textContent = "FraserCare";
+
+        const links = document.createElement("div");
+        links.className = "nav-links";
+
+        navLinksFor(user).forEach(([label, href]) => {
+            const link = document.createElement("a");
+            link.href = href;
+            link.textContent = label;
+
+            if (window.location.pathname === href) {
+                link.classList.add("active");
+            }
+
+            links.appendChild(link);
+        });
+
+        if (user) {
+            const name = document.createElement("span");
+            name.className = "nav-user";
+            name.textContent = user.fullName || user.email;
+
+            const logout = document.createElement("form");
+            logout.className = "logout-form";
+            logout.action = "/logout";
+            logout.method = "post";
+
+            const button = document.createElement("button");
+            button.type = "submit";
+            button.textContent = "Log out";
+
+            logout.appendChild(button);
+            links.append(name, logout);
+        }
+
+        container.append(logo, links);
+    }
+
+    if (user) {
+        document.querySelectorAll(".user-name").forEach(element => {
+            element.textContent = user.fullName || user.email;
+        });
+
+        await prepareLogoutForms();
+    }
+
+    return user;
+}

@@ -1,0 +1,86 @@
+/* Shared top navigation bar (built by renderSiteNav in auth.js) */
+
+.site-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 18px 6%;
+    background: #ffffff;
+    border-bottom: 1px solid #dfe8e2;
+    font-family: Arial, sans-serif;
+}
+
+.site-nav .nav-logo {
+    color: #176b52;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.site-nav .nav-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+}
+
+.site-nav .nav-links a {
+    color: #24332d;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.site-nav .nav-links a:hover,
+.site-nav .nav-links a.active {
+    color: #176b52;
+}
+
+.site-nav .nav-user {
+    color: #718078;
+    font-size: 14px;
+}
+
+.site-nav form {
+    display: inline;
+    margin: 0;
+}
+
+.site-nav button {
+    width: auto;
+    margin: 0;
+    padding: 6px 14px;
+    background: none;
+    color: #176b52;
+    border: 1px solid #176b52;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.site-nav button:hover {
+    background: #e8f3ed;
+}
+
+/* Keeps the bar from flashing empty before it loads */
+#site-nav:empty {
+    min-height: 66px;
+    background: #ffffff;
+    border-bottom: 1px solid #dfe8e2;
+}
+
+@media (max-width: 600px) {
+    .site-nav {
+        padding: 14px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .site-nav .nav-links {
+        gap: 14px;
+    }
+}
