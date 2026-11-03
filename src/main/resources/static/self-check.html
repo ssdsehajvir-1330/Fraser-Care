@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Self-Check | FraserCare</title>
     <link rel="stylesheet" href="/css/self-check.css">
+    <link rel="stylesheet" href="/css/nav.css">
 </head>
 <body>
+    <div id="site-nav"></div>
+
     <main>
         <h1>Pharmacy Self-Check</h1>
         <p class="notice">This questionnaire does not diagnose anything. It suggests pharmacy services you may want to book.</p>
@@ -17,5 +20,7 @@
         <section id="result" hidden></section>
     </main>
     <script src="/js/self-check.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>renderSiteNav();</script>
 </body>
 </html>
