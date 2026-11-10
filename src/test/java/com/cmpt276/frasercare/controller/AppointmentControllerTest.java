@@ -26,13 +26,17 @@ class AppointmentControllerTest {
     private final AppointmentController controller =
             new AppointmentController(bookingService, jdbc);
 
-    @Test
-    void customerCanViewOwnAppointments() {
-        Authentication customer = new UsernamePasswordAuthenticationToken(
+    private Authentication customerAuthentication() {
+        return new UsernamePasswordAuthenticationToken(
                 "customer@frasercare.ca",
                 "password",
                 List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))
         );
+    }
+
+    @Test
+    void customerCanViewOwnAppointments() {
+        Authentication customer = customerAuthentication();
 
         List<Appointment> appointments = List.of(mock(Appointment.class));
 
@@ -76,21 +80,141 @@ class AppointmentControllerTest {
 
     @Test
     void rejectsMissingCustomerAccount() {
-        Authentication customer = new UsernamePasswordAuthenticationToken(
-                "missing@frasercare.ca",
-                "password",
-                List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))
-        );
+        Authentication customer = customerAuthentication();
 
         when(jdbc.queryForObject(
                 "SELECT user_id FROM auth_users WHERE username = ?",
                 Long.class,
-                "missing@frasercare.ca"
+                "customer@frasercare.ca"
         )).thenThrow(new EmptyResultDataAccessException(1));
 
         ResponseEntity<?> response = controller.getMyAppointments(customer);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         verifyNoInteractions(bookingService);
+    }
+
+    @Test
+    void customerCanCancelOwnAppointment() {
+        Authentication customer = customerAuthentication();
+
+        Appointment cancelled = new Appointment();
+        cancelled.setAppointmentId(42L);
+        cancelled.setCustomerId(3L);
+        cancelled.setStatus("CANCELLED");
+
+        when(jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                "customer@frasercare.ca"
+        )).thenReturn(3L);
+
+        when(bookingService.cancelAppointment(42L, 3L))
+                .thenReturn(cancelled);
+
+        ResponseEntity<?> response =
+                controller.cancelAppointment(42L, customer);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertSame(cancelled, response.getBody());
+        assertEquals("CANCELLED",
+                ((Appointment) response.getBody()).getStatus());
+
+        verify(bookingService).cancelAppointment(42L, 3L);
+    }
+
+    @Test
+    void rejectsUnauthenticatedCancellation() {
+        ResponseEntity<?> response =
+                controller.cancelAppointment(42L, null);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        verifyNoInteractions(jdbc, bookingService);
+    }
+
+    @Test
+    void rejectsStaffCancellation() {
+        Authentication staff = new UsernamePasswordAuthenticationToken(
+                "staff@frasercare.ca",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_STAFF"))
+        );
+
+        ResponseEntity<?> response =
+                controller.cancelAppointment(42L, staff);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        verifyNoInteractions(jdbc, bookingService);
+    }
+
+    @Test
+    void rejectsCancellationWhenCustomerAccountMissing() {
+        Authentication customer = customerAuthentication();
+
+        when(jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                "customer@frasercare.ca"
+        )).thenThrow(new EmptyResultDataAccessException(1));
+
+        ResponseEntity<?> response =
+                controller.cancelAppointment(42L, customer);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        verifyNoInteractions(bookingService);
+    }
+
+    @Test
+    void rejectsInvalidAppointmentId() {
+        Authentication customer = customerAuthentication();
+
+        ResponseEntity<?> response =
+                controller.cancelAppointment(0L, customer);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verifyNoInteractions(jdbc, bookingService);
+    }
+
+    @Test
+    void preventsCustomerFromCancellingAnotherCustomersAppointment() {
+        Authentication customer = customerAuthentication();
+
+        when(jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                "customer@frasercare.ca"
+        )).thenReturn(3L);
+
+        when(bookingService.cancelAppointment(42L, 3L))
+                .thenThrow(new IllegalArgumentException(
+                        "Appointment not found."
+                ));
+
+        ResponseEntity<?> response =
+                controller.cancelAppointment(42L, customer);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(bookingService).cancelAppointment(42L, 3L);
+    }
+
+    @Test
+    void returnsConflictWhenAppointmentCannotBeCancelled() {
+        Authentication customer = customerAuthentication();
+
+        when(jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                "customer@frasercare.ca"
+        )).thenReturn(3L);
+
+        when(bookingService.cancelAppointment(42L, 3L))
+                .thenThrow(new IllegalStateException(
+                        "This appointment is not currently booked."
+                ));
+
+        ResponseEntity<?> response =
+                controller.cancelAppointment(42L, customer);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 }

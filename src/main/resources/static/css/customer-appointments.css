@@ -1,0 +1,121 @@
+.appointments-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.appointment-card {
+    background: #ffffff;
+    border: 1px solid #e1e8e4;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.appointment-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.appointment-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #26332f;
+}
+
+.appointment-status {
+    display: inline-block;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status-booked {
+    background: #e1f4e9;
+    color: #16805d;
+}
+
+.status-cancelled {
+    background: #fde8e7;
+    color: #b42318;
+}
+
+.status-other {
+    background: #eef0f2;
+    color: #52635a;
+}
+
+.appointment-details {
+    margin-top: 14px;
+    color: #52635a;
+    font-size: 14px;
+}
+
+.appointment-details p {
+    margin: 7px 0;
+}
+
+.appointment-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.cancel-appointment-button {
+    background: #ffffff;
+    color: #b42318;
+    border: 1px solid #b42318;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cancel-appointment-button:hover {
+    background: #fde8e7;
+}
+
+.cancel-appointment-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.appointment-message {
+    min-height: 22px;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.appointment-message.success {
+    color: #176b52;
+}
+
+.appointment-message.error {
+    color: #b42318;
+}
+
+.empty-appointments {
+    color: #69766f;
+    padding: 16px 0;
+}
+
+@media (max-width: 600px) {
+    .appointment-card {
+        padding: 16px;
+    }
+
+    .appointment-card-header {
+        align-items: flex-start;
+    }
+
+    .appointment-actions {
+        justify-content: stretch;
+    }
+
+    .cancel-appointment-button {
+        width: 100%;
+    }
+}

@@ -63,7 +63,10 @@ class AppointmentBookingIntegrationTest {
                 .contains(start));
 
         Appointment cancelled =
-                bookingService.cancelAppointment(booked.getAppointmentId());
+                bookingService.cancelAppointment(
+                        booked.getAppointmentId(),
+                        booked.getCustomerId()
+                );
 
         assertEquals("CANCELLED", cancelled.getStatus());
 

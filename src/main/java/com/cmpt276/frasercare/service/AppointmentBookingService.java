@@ -1,4 +1,3 @@
-
 package com.cmpt276.frasercare.service;
 
 import com.cmpt276.frasercare.dto.StaffAppointmentResponse;
@@ -7,12 +6,13 @@ import com.cmpt276.frasercare.model.PharmacyService;
 import com.cmpt276.frasercare.repository.AppointmentRepository;
 import com.cmpt276.frasercare.repository.PharmacyServiceRepository;
 import org.springframework.stereotype.Service;
+
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.List;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AppointmentBookingService {
@@ -36,6 +36,7 @@ public class AppointmentBookingService {
             appointment.getEndTime() == null) {
             throw new IllegalArgumentException("Missing appointment details.");
         }
+
         if (appointment.getAppointmentId() != null) {
             throw new IllegalArgumentException("Appointment ID must not be provided when booking.");
         }
@@ -112,17 +113,42 @@ public class AppointmentBookingService {
                 .findByCustomerIdOrderByAppointmentDateAscStartTimeAsc(customerId);
     }
 
-    public Appointment cancelAppointment(Long appointmentId) {
+    public Appointment cancelAppointment(Long appointmentId, Long customerId) {
 
-        if (appointmentId == null || appointmentId <= 0) {
-            throw new IllegalArgumentException("Invalid appointment ID.");
+        if (appointmentId == null || appointmentId <= 0 ||
+            customerId == null || customerId <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid appointment or customer ID."
+            );
         }
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found."));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Appointment not found."
+                ));
+
+        if (!customerId.equals(appointment.getCustomerId())) {
+            throw new IllegalArgumentException(
+                    "Appointment not found."
+            );
+        }
 
         if (!"BOOKED".equals(appointment.getStatus())) {
-            throw new IllegalStateException("This appointment is not currently booked.");
+            throw new IllegalStateException(
+                    "This appointment is not currently booked."
+            );
+        }
+
+        ZoneId timeZone = ZoneId.of("America/Vancouver");
+        LocalDate today = LocalDate.now(timeZone);
+        LocalTime now = LocalTime.now(timeZone);
+
+        if (appointment.getAppointmentDate().isBefore(today) ||
+            (appointment.getAppointmentDate().equals(today) &&
+             !appointment.getStartTime().isAfter(now))) {
+            throw new IllegalStateException(
+                    "Only future appointments can be cancelled."
+            );
         }
 
         appointment.setStatus("CANCELLED");
@@ -186,8 +212,6 @@ public class AppointmentBookingService {
         return availableTimes;
     }
 
-    // Check whether a valid appointment slot is already booked
-    // and therefore eligible for the waitlist
     public boolean isWaitlistEligibleSlot(
             Long serviceId,
             LocalDate date,
@@ -197,7 +221,7 @@ public class AppointmentBookingService {
         if (serviceId == null || serviceId <= 0 ||
             date == null || startTime == null || endTime == null) {
             throw new IllegalArgumentException(
-                "Missing or invalid appointment details."
+                    "Missing or invalid appointment details."
             );
         }
 
@@ -206,24 +230,24 @@ public class AppointmentBookingService {
 
         if (date.isBefore(today)) {
             throw new IllegalArgumentException(
-                "Appointment date cannot be in the past."
+                    "Appointment date cannot be in the past."
             );
         }
 
         if (!endTime.isAfter(startTime)) {
             throw new IllegalArgumentException(
-                "End time must be after start time."
+                    "End time must be after start time."
             );
         }
 
         PharmacyService service = pharmacyServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new IllegalArgumentException(
-                    "Pharmacy service not found."
+                        "Pharmacy service not found."
                 ));
 
         if (!service.isActive()) {
             throw new IllegalArgumentException(
-                "Pharmacy service is not active."
+                    "Pharmacy service is not active."
             );
         }
 
@@ -231,7 +255,7 @@ public class AppointmentBookingService {
 
         if (!duration.equals(Duration.ofMinutes(service.getDurationMinutes()))) {
             throw new IllegalArgumentException(
-                "Appointment duration does not match service duration."
+                    "Appointment duration does not match service duration."
             );
         }
 
@@ -241,7 +265,7 @@ public class AppointmentBookingService {
         if (startTime.isBefore(openingTime) ||
             endTime.isAfter(closingTime)) {
             throw new IllegalArgumentException(
-                "Appointment must be between 9 AM and 5 PM."
+                    "Appointment must be between 9 AM and 5 PM."
             );
         }
 
@@ -249,24 +273,23 @@ public class AppointmentBookingService {
             startTime.getSecond() != 0 ||
             startTime.getNano() != 0) {
             throw new IllegalArgumentException(
-                "Appointments must start every 15 minutes."
+                    "Appointments must start every 15 minutes."
             );
         }
 
         if (date.equals(today) &&
             !startTime.isAfter(LocalTime.now(timeZone))) {
             throw new IllegalArgumentException(
-                "Appointment time cannot be in the past."
+                    "Appointment time cannot be in the past."
             );
         }
 
-        // Return true only if a BOOKED appointment overlaps this slot
         return appointmentRepository
                 .existsByAppointmentDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
-                    date,
-                    "BOOKED",
-                    endTime,
-                    startTime
+                        date,
+                        "BOOKED",
+                        endTime,
+                        startTime
                 );
     }
 
@@ -304,5 +327,4 @@ public class AppointmentBookingService {
 
         return responses;
     }
-
 }
