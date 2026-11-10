@@ -88,8 +88,18 @@ button:disabled {
     padding: 6px 0;
 }
 
-#result li button {
+#result .book-link {
     padding: 4px 12px;
+    border-radius: 6px;
+    background: #1f6f8b;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+#result .unavailable {
+    font-size: 0.85rem;
+    color: #4b5b66;
 }
 
 .disclaimer {
