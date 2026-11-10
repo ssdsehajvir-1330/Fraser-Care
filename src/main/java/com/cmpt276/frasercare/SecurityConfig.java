@@ -42,7 +42,7 @@ public class SecurityConfig {
                     .hasAnyRole("STAFF", "ADMIN")
 
                 // Customer only
-                .requestMatchers(CUSTOMER_HOME)
+                .requestMatchers(CUSTOMER_HOME, "/pickups.html" , "/api/pickups/**")
                     .hasRole("CUSTOMER")
 
                 // Everything else just needs a login
