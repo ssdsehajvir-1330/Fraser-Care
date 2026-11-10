@@ -1,5 +1,7 @@
 package com.cmpt276.frasercare.service;
 
+import com.cmpt276.frasercare.model.PharmacyService;
+import com.cmpt276.frasercare.model.RecommendedService;
 import com.cmpt276.frasercare.model.SelfCheckOption;
 import com.cmpt276.frasercare.model.SelfCheckQuestion;
 import com.cmpt276.frasercare.model.SelfCheckResult;
@@ -8,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class SelfCheckService {
@@ -15,7 +18,6 @@ public class SelfCheckService {
     static final String FLU_VACCINATION = "Flu Vaccination";
     static final String MEDICATION_REVIEW = "Medication Review";
     static final String BLOOD_PRESSURE_CHECK = "Blood Pressure Check";
-    // TODO: add these two to the pharmacy_services catalogue
     static final String MINOR_AILMENT_CONSULTATION = "Minor Ailment Consultation";
     static final String GENERAL_CONSULTATION = "General Pharmacist Consultation";
 
@@ -40,6 +42,12 @@ public class SelfCheckService {
                     "Have you had a flu shot this season?", List.of(YES, NO, NOT_SURE)),
             new SelfCheckQuestion("bp-checked",
                     "Have you had your blood pressure checked in the last 12 months?", List.of(YES, NO, NOT_SURE)));
+
+    private final PharmacyCatalogService catalogService;
+
+    public SelfCheckService(PharmacyCatalogService catalogService) {
+        this.catalogService = catalogService;
+    }
 
     public List<SelfCheckQuestion> getQuestions() {
         return QUESTIONS;
@@ -72,7 +80,13 @@ public class SelfCheckService {
         if (!"yes".equals(answers.get("bp-checked"))) {
             services.add(BLOOD_PRESSURE_CHECK);
         }
-        return SelfCheckResult.recommend(List.copyOf(services));
+        return SelfCheckResult.recommend(withCatalogueIds(services));
+    }
+
+    private List<RecommendedService> withCatalogueIds(Set<String> names) {
+        Map<String, Long> ids = catalogService.getActiveServices().stream()
+                .collect(Collectors.toMap(PharmacyService::getName, PharmacyService::getServiceId));
+        return names.stream().map(name -> new RecommendedService(name, ids.get(name))).toList();
     }
 
     private void requireValidAnswer(SelfCheckQuestion question, Map<String, String> answers) {
