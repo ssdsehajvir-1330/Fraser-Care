@@ -75,6 +75,41 @@ public class AppointmentController {
         }
     }
 
+    @GetMapping("/mine")
+    public ResponseEntity<?> getMyAppointments(Authentication authentication) {
+
+        if (authentication == null ||
+            authentication instanceof AnonymousAuthenticationToken ||
+            !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Please log in to view your appointments.");
+        }
+
+        boolean isCustomer = authentication.getAuthorities().stream()
+                .anyMatch(role -> role.getAuthority().equals("ROLE_CUSTOMER"));
+
+        if (!isCustomer) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Only customers can view their appointments.");
+        }
+
+        try {
+            Long customerId = jdbc.queryForObject(
+                    "SELECT user_id FROM auth_users WHERE username = ?",
+                    Long.class,
+                    authentication.getName()
+            );
+
+            return ResponseEntity.ok(
+                    appointmentBookingService.getAppointmentsByCustomerId(customerId)
+            );
+
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Customer account not found.");
+        }
+    }
+
     @GetMapping("/availability")
     public ResponseEntity<?> getAvailability(
             @RequestParam Long serviceId,
