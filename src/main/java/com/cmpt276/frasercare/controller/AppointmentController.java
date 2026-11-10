@@ -75,6 +75,95 @@ public class AppointmentController {
         }
     }
 
+    @GetMapping("/mine")
+    public ResponseEntity<?> getMyAppointments(Authentication authentication) {
+
+        if (authentication == null ||
+            authentication instanceof AnonymousAuthenticationToken ||
+            !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Please log in to view your appointments.");
+        }
+
+        boolean isCustomer = authentication.getAuthorities().stream()
+                .anyMatch(role -> role.getAuthority().equals("ROLE_CUSTOMER"));
+
+        if (!isCustomer) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Only customers can view their appointments.");
+        }
+
+        try {
+            Long customerId = jdbc.queryForObject(
+                    "SELECT user_id FROM auth_users WHERE username = ?",
+                    Long.class,
+                    authentication.getName()
+            );
+
+            return ResponseEntity.ok(
+                    appointmentBookingService.getAppointmentsByCustomerId(customerId)
+            );
+
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Customer account not found.");
+        }
+    }
+
+    @PatchMapping("/{appointmentId}/cancel")
+    public ResponseEntity<?> cancelAppointment(
+            @PathVariable Long appointmentId,
+            Authentication authentication) {
+
+        if (authentication == null ||
+            authentication instanceof AnonymousAuthenticationToken ||
+            !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Please log in to cancel an appointment.");
+        }
+
+        boolean isCustomer = authentication.getAuthorities().stream()
+                .anyMatch(role -> role.getAuthority().equals("ROLE_CUSTOMER"));
+
+        if (!isCustomer) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Only customers can cancel appointments.");
+        }
+
+        if (appointmentId == null || appointmentId <= 0) {
+            return ResponseEntity.badRequest()
+                    .body("Invalid appointment ID.");
+        }
+
+        try {
+            Long customerId = jdbc.queryForObject(
+                    "SELECT user_id FROM auth_users WHERE username = ?",
+                    Long.class,
+                    authentication.getName()
+            );
+
+            Appointment cancelledAppointment =
+                    appointmentBookingService.cancelAppointment(
+                            appointmentId,
+                            customerId
+                    );
+
+            return ResponseEntity.ok(cancelledAppointment);
+
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Customer account not found.");
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
+        }
+    }
+
     @GetMapping("/availability")
     public ResponseEntity<?> getAvailability(
             @RequestParam Long serviceId,

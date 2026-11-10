@@ -34,6 +34,8 @@ class AppointmentBookingServiceTest {
         LocalDate date = LocalDate.now(ZoneId.of("America/Vancouver")).plusDays(2);
 
         Appointment appointment = new Appointment();
+        appointment.setCustomerId(5L);
+        appointment.setAppointmentDate(date);
         appointment.setStatus("BOOKED");
         appointment.setStartTime(LocalTime.of(10, 0));
         appointment.setEndTime(LocalTime.of(10, 15));
@@ -52,7 +54,7 @@ class AppointmentBookingServiceTest {
         assertFalse(bookingService.getAvailableStartTimes(1L, date)
                 .contains(LocalTime.of(10, 0)));
 
-        Appointment cancelled = bookingService.cancelAppointment(1L);
+        Appointment cancelled = bookingService.cancelAppointment(1L, 5L);
 
         assertEquals("CANCELLED", cancelled.getStatus());
 
@@ -72,12 +74,15 @@ class AppointmentBookingServiceTest {
                 new AppointmentBookingService(appointmentRepo, pharmacyRepo);
 
         Appointment appointment = new Appointment();
+        appointment.setCustomerId(5L);
         appointment.setStatus("CANCELLED");
 
         when(appointmentRepo.findById(1L)).thenReturn(Optional.of(appointment));
 
         assertThrows(IllegalStateException.class,
-                () -> bookingService.cancelAppointment(1L));
+                () -> bookingService.cancelAppointment(1L, 5L));
+
+        verify(appointmentRepo, never()).save(any(Appointment.class));
     }
 
     @Test
@@ -92,8 +97,63 @@ class AppointmentBookingServiceTest {
         when(appointmentRepo.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class,
-                () -> bookingService.cancelAppointment(999L));
+                () -> bookingService.cancelAppointment(999L, 5L));
+
+        verify(appointmentRepo, never()).save(any(Appointment.class));
     }
+
+    @Test
+    void cannotCancelAnotherCustomersAppointment() {
+
+        AppointmentRepository appointmentRepo = mock(AppointmentRepository.class);
+        PharmacyServiceRepository pharmacyRepo = mock(PharmacyServiceRepository.class);
+
+        AppointmentBookingService bookingService =
+                new AppointmentBookingService(appointmentRepo, pharmacyRepo);
+
+        Appointment appointment = new Appointment();
+        appointment.setCustomerId(6L);
+        appointment.setAppointmentDate(
+                LocalDate.now(ZoneId.of("America/Vancouver")).plusDays(2)
+        );
+        appointment.setStartTime(LocalTime.of(10, 0));
+        appointment.setEndTime(LocalTime.of(10, 15));
+        appointment.setStatus("BOOKED");
+
+        when(appointmentRepo.findById(1L)).thenReturn(Optional.of(appointment));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> bookingService.cancelAppointment(1L, 5L));
+
+        verify(appointmentRepo, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    void cannotCancelPastAppointment() {
+
+        AppointmentRepository appointmentRepo = mock(AppointmentRepository.class);
+        PharmacyServiceRepository pharmacyRepo = mock(PharmacyServiceRepository.class);
+
+        AppointmentBookingService bookingService =
+                new AppointmentBookingService(appointmentRepo, pharmacyRepo);
+
+        Appointment appointment = new Appointment();
+        appointment.setCustomerId(5L);
+        appointment.setAppointmentDate(
+                LocalDate.now(ZoneId.of("America/Vancouver")).minusDays(1)
+        );
+        appointment.setStartTime(LocalTime.of(10, 0));
+        appointment.setEndTime(LocalTime.of(10, 15));
+        appointment.setStatus("BOOKED");
+
+        when(appointmentRepo.findById(1L)).thenReturn(Optional.of(appointment));
+
+        assertThrows(IllegalStateException.class,
+                () -> bookingService.cancelAppointment(1L, 5L));
+
+        verify(appointmentRepo, never()).save(any(Appointment.class));
+    }
+
     @Test
     void cannotBookBeforeOpeningTime() {
 
@@ -178,5 +238,4 @@ class AppointmentBookingServiceTest {
 
         verify(appointmentRepo, never()).save(any(Appointment.class));
     }
-
 }
