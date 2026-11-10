@@ -5,6 +5,9 @@ import com.cmpt276.frasercare.model.RecommendedService;
 import com.cmpt276.frasercare.model.SelfCheckResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +19,13 @@ import static org.mockito.Mockito.*;
 class SelfCheckServiceTest {
 
     private final PharmacyCatalogService catalog = mock(PharmacyCatalogService.class);
-    private final SelfCheckService service = new SelfCheckService(catalog);
+    private final SelfCheckService service = serviceOn("2026-11-15");
+    private final SelfCheckService summerService = serviceOn("2026-07-15");
+
+    private SelfCheckService serviceOn(String date) {
+        ZoneId vancouver = ZoneId.of("America/Vancouver");
+        return new SelfCheckService(catalog, Clock.fixed(Instant.parse(date + "T12:00:00Z"), vancouver));
+    }
 
     @BeforeEach
     void seedCatalogue() {
@@ -91,6 +100,43 @@ class SelfCheckServiceTest {
         SelfCheckResult result = service.evaluate(answers("minor-ailment", "no", "yes", "yes"));
 
         assertEquals(List.of(new RecommendedService(MINOR_AILMENT_CONSULTATION, null)), result.recommendedServices());
+    }
+
+    @Test
+    void fluSeasonRunsOctoberToApril() {
+        assertTrue(serviceOn("2026-10-01").isFluSeason());
+        assertTrue(serviceOn("2027-01-20").isFluSeason());
+        assertTrue(serviceOn("2027-04-30").isFluSeason());
+        assertFalse(serviceOn("2027-05-01").isFluSeason());
+        assertFalse(serviceOn("2026-09-30").isFluSeason());
+    }
+
+    @Test
+    void fluShotQuestionIsOnlyAskedInSeason() {
+        assertTrue(service.getQuestions().stream().anyMatch(q -> q.id().equals("flu-shot")));
+        assertTrue(summerService.getQuestions().stream().noneMatch(q -> q.id().equals("flu-shot")));
+    }
+
+    @Test
+    void offSeasonNeverSuggestsFluShot() {
+        Map<String, String> answers = answers("blood-pressure", "no", "no", "yes");
+        answers.remove("flu-shot");
+
+        SelfCheckResult result = summerService.evaluate(answers);
+
+        assertEquals(List.of(BLOOD_PRESSURE_CHECK), names(result));
+        assertNull(result.note());
+    }
+
+    @Test
+    void offSeasonVaccineRequestGoesToPharmacistWithNote() {
+        Map<String, String> answers = answers("vaccine", "no", "no", "yes");
+        answers.remove("flu-shot");
+
+        SelfCheckResult result = summerService.evaluate(answers);
+
+        assertEquals(List.of(GENERAL_CONSULTATION), names(result));
+        assertEquals(FLU_OFF_SEASON_NOTE, result.note());
     }
 
     @Test

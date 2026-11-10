@@ -73,6 +73,13 @@ function showResult(result) {
         resultEl.appendChild(list);
     }
 
+    if (result.note) {
+        const note = document.createElement("p");
+        note.className = "note";
+        note.textContent = result.note;
+        resultEl.appendChild(note);
+    }
+
     const disclaimer = document.createElement("p");
     disclaimer.className = "disclaimer";
     disclaimer.textContent = result.disclaimer;

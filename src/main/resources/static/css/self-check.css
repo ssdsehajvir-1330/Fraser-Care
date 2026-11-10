@@ -102,6 +102,10 @@ button:disabled {
     color: #4b5b66;
 }
 
+.note {
+    font-style: italic;
+}
+
 .disclaimer {
     font-size: 0.85rem;
     color: #4b5b66;
