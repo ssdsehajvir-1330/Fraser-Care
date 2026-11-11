@@ -1,4 +1,3 @@
-
 package com.cmpt276.frasercare.model;
 
 import jakarta.persistence.*;
@@ -36,10 +35,13 @@ public class WaitlistEntry {
     @Column(nullable = false)
     private String status = "WAITING";
 
+    // Calculated dynamically; not stored in PostgreSQL
+    @Transient
+    private Integer queuePosition;
+
     public WaitlistEntry() {
     }
 
-    
     public Long getWaitlistId() {
         return waitlistId;
     }
@@ -104,11 +106,18 @@ public class WaitlistEntry {
         this.status = status;
     }
 
+    public Integer getQueuePosition() {
+        return queuePosition;
+    }
+
+    public void setQueuePosition(Integer queuePosition) {
+        this.queuePosition = queuePosition;
+    }
+
     @PrePersist
     public void onCreate() {
         if (joinedAt == null) {
             joinedAt = LocalDateTime.now();
         }
     }
-
 }
