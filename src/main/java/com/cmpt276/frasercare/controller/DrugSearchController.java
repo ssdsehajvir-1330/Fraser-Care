@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/drugs")
@@ -29,8 +30,28 @@ public class DrugSearchController {
             return ResponseEntity.badRequest().body(e.getMessage());
 
         } catch (RestClientException e) {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body("The Health Canada drug database is unavailable right now. Please try again later.");
+            return healthCanadaUnavailable();
         }
+    }
+
+    @GetMapping("/{drugCode}")
+    public ResponseEntity<?> details(@PathVariable long drugCode) {
+        try {
+            return ResponseEntity.ok(drugSearchService.getDetails(drugCode));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+        } catch (RestClientException e) {
+            return healthCanadaUnavailable();
+        }
+    }
+
+    private ResponseEntity<String> healthCanadaUnavailable() {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body("The Health Canada drug database is unavailable right now. Please try again later.");
     }
 }
