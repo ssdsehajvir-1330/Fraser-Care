@@ -15,7 +15,9 @@ INSERT INTO pharmacy_services
 VALUES
     ('Flu Vaccination', 'Seasonal influenza vaccination', 15, TRUE),
     ('Medication Review', 'Review of current medications', 30, TRUE),
-    ('Blood Pressure Check', 'Blood pressure measurement', 15, TRUE)
+    ('Blood Pressure Check', 'Blood pressure measurement', 15, TRUE),
+    ('Minor Ailment Consultation', 'Pharmacist assessment for minor ailments such as allergies, cold sores, or heartburn', 20, TRUE),
+    ('General Pharmacist Consultation', 'General questions for a pharmacist', 15, TRUE)
 ON CONFLICT (name) DO NOTHING;
 
 -- Appointment bookings

@@ -7,21 +7,41 @@
 
     <link rel="stylesheet" href="/css/auth.css">
     <link rel="stylesheet" href="/css/nav.css">
+    <link rel="stylesheet" href="/css/customer-appointments.css">
+
     <script src="/js/auth.js" defer></script>
+    <script src="/js/customer-appointments.js" defer></script>
 </head>
 <body>
-    <!-- Shared top nav (filled in by auth.js) -->
     <div id="site-nav"></div>
 
     <main>
         <section class="card">
-           <p class="eyebrow">YOUR FRASERCARE ACCOUNT</p>
-           <h1>Welcome back, <span class="user-name"></span>!</h1>
-           <p class="muted">
-               Manage your pharmacy appointments, explore available services,
-               and find the care you need.
-           </p>
-</section>
+            <p class="eyebrow">YOUR FRASERCARE ACCOUNT</p>
+            <h1>Welcome back, <span class="user-name"></span>!</h1>
+            <p class="muted">
+                Manage your pharmacy appointments, explore available services,
+                and find the care you need.
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>My Appointments</h2>
+            <p class="muted">
+                View your appointments and manage upcoming bookings.
+            </p>
+
+            <div
+                id="appointmentsMessage"
+                class="appointment-message"
+                role="status"
+                aria-live="polite">
+            </div>
+
+            <div id="appointmentsList" class="appointments-list">
+                Loading your appointments...
+            </div>
+        </section>
 
         <section class="card">
             <h2>What you can do</h2>
@@ -35,7 +55,7 @@
     </main>
 
     <script>
-         document.addEventListener("DOMContentLoaded", () => renderSiteNav());
+        document.addEventListener("DOMContentLoaded", () => renderSiteNav());
     </script>
 </body>
 </html>
