@@ -21,6 +21,11 @@ class HealthCanadaDrugClientTest {
               "company_name":"HALEON CANADA ULC","last_update_date":"2026-09-24"}]
             """;
 
+    private static final String IBUPROFEN_JSON = """
+            [{"dosage_unit":"","dosage_value":"","drug_code":13452,"ingredient_name":"IBUPROFEN",
+              "strength":"200","strength_unit":"MG"}]
+            """;
+
     private MockRestServiceServer server;
     private HealthCanadaDrugClient client;
 
@@ -55,6 +60,17 @@ class HealthCanadaDrugClientTest {
 
         assertTrue(client.findByDin("99999999").isEmpty());
         server.verify();
+    }
+
+    @Test
+    void activeIngredientsMapStrength() {
+        server.expect(requestTo(HealthCanadaDrugClient.BASE_URL + "/activeingredient/?id=13452&lang=en&type=json"))
+                .andRespond(withSuccess(IBUPROFEN_JSON, MediaType.APPLICATION_JSON));
+
+        List<DpdActiveIngredient> ingredients = client.getActiveIngredients(13452);
+
+        server.verify();
+        assertEquals(List.of(new DpdActiveIngredient("IBUPROFEN", "200", "MG", "", "")), ingredients);
     }
 
     @Test
