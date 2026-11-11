@@ -67,14 +67,17 @@ function showResult(result) {
         const list = document.createElement("ul");
         result.recommendedServices.forEach(service => {
             const item = document.createElement("li");
-            const book = document.createElement("button");
-            book.textContent = "Book";
-            book.disabled = true;
-            book.title = "Booking from the self-check is coming in Iteration 2";
-            item.append(service, " ", book);
+            item.append(service.name, " ", bookingAction(service));
             list.appendChild(item);
         });
         resultEl.appendChild(list);
+    }
+
+    if (result.note) {
+        const note = document.createElement("p");
+        note.className = "note";
+        note.textContent = result.note;
+        resultEl.appendChild(note);
     }
 
     const disclaimer = document.createElement("p");
@@ -84,6 +87,20 @@ function showResult(result) {
 
     resultEl.hidden = false;
     resultEl.scrollIntoView({ behavior: "smooth" });
+}
+
+function bookingAction(service) {
+    if (service.serviceId == null) {
+        const note = document.createElement("span");
+        note.className = "unavailable";
+        note.textContent = "Ask a pharmacist in store";
+        return note;
+    }
+    const link = document.createElement("a");
+    link.className = "book-link";
+    link.href = `/?serviceId=${service.serviceId}#booking`;
+    link.textContent = "Book Appointment";
+    return link;
 }
 
 function showError(text) {

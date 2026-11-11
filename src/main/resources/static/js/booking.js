@@ -143,9 +143,23 @@ async function loadServices() {
             showMessage("No pharmacy services are currently available.", true);
         }
 
+        preselectService();
+
     } catch (error) {
         showMessage(error.message, true);
     }
+}
+
+// Lets other pages (e.g. the self-check) open booking with a service chosen
+function preselectService() {
+    const serviceId = new URLSearchParams(window.location.search).get("serviceId");
+
+    if (!serviceId || ![...serviceSelect.options].some(option => option.value === serviceId)) {
+        return;
+    }
+
+    serviceSelect.value = serviceId;
+    serviceSelect.dispatchEvent(new Event("change"));
 }
 
 async function loadAvailableTimes() {
