@@ -86,10 +86,11 @@ public class SelfCheckService {
         }
         boolean fluSeason = isFluSeason();
         getQuestions().forEach(question -> requireValidAnswer(question, answers));
+        boolean needsFluShot = fluSeason && !"yes".equals(answers.get("flu-shot"));
 
         Set<String> services = new LinkedHashSet<>();
         services.add(switch (answers.get("reason")) {
-            case "vaccine" -> fluSeason ? FLU_VACCINATION : GENERAL_CONSULTATION;
+            case "vaccine" -> needsFluShot ? FLU_VACCINATION : GENERAL_CONSULTATION;
             case "medications" -> MEDICATION_REVIEW;
             case "blood-pressure" -> BLOOD_PRESSURE_CHECK;
             case "minor-ailment" -> MINOR_AILMENT_CONSULTATION;
@@ -98,7 +99,7 @@ public class SelfCheckService {
         if ("yes".equals(answers.get("multiple-meds"))) {
             services.add(MEDICATION_REVIEW);
         }
-        if (fluSeason && !"yes".equals(answers.get("flu-shot"))) {
+        if (needsFluShot) {
             services.add(FLU_VACCINATION);
         }
         if (!"yes".equals(answers.get("bp-checked"))) {

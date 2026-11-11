@@ -89,10 +89,23 @@ class SelfCheckServiceTest {
 
     @Test
     void recommendationsCarryCatalogueIds() {
-        SelfCheckResult result = service.evaluate(answers("vaccine", "yes", "yes", "yes"));
+        SelfCheckResult result = service.evaluate(answers("vaccine", "yes", "no", "yes"));
 
         assertEquals(List.of(new RecommendedService(FLU_VACCINATION, 1L), new RecommendedService(MEDICATION_REVIEW, 2L)),
                 result.recommendedServices());
+    }
+
+    @Test
+    void vaccineRequestAfterFluShotSuggestsConsultation() {
+        SelfCheckResult result = service.evaluate(answers("vaccine", "no", "yes", "yes"));
+
+        assertEquals(List.of(GENERAL_CONSULTATION), names(result));
+    }
+
+    @Test
+    void vaccineRequestWhenUnsureAboutFluShotSuggestsFluVaccination() {
+        assertEquals(List.of(FLU_VACCINATION), names(service.evaluate(answers("vaccine", "no", "not-sure", "yes"))));
+        assertEquals(List.of(FLU_VACCINATION), names(service.evaluate(answers("vaccine", "no", "no", "yes"))));
     }
 
     @Test

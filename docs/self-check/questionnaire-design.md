@@ -35,7 +35,7 @@ Give customers a short, non-diagnostic questionnaire that points them to pharmac
 
 | Answer | Service |
 |--------|---------|
-| `vaccine` | Flu Vaccination (in flu season), otherwise General Pharmacist Consultation |
+| `vaccine` | Flu Vaccination if it's flu season and question 4 is No or Not sure; otherwise General Pharmacist Consultation |
 | `medications` | Medication Review |
 | `blood-pressure` | Blood Pressure Check |
 | `minor-ailment` | Minor Ailment Consultation |
