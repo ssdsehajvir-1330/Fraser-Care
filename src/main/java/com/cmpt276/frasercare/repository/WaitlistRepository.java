@@ -14,5 +14,10 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
         LocalDate appointmentDate,
         LocalTime startTime
     );
+
+    // Retrieve all waitlist entries belonging to a customer
+    List<WaitlistEntry> findByCustomerIdOrderByJoinedAtDescWaitlistIdDesc(
+        Long customerId
+    );
 }
 

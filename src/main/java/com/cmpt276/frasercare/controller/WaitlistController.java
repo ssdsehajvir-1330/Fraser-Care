@@ -8,8 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.web.csrf.CsrfToken;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,6 +23,7 @@ public class WaitlistController {
     public WaitlistController(
             WaitlistService waitlistService,
             JdbcTemplate jdbc) {
+
         this.waitlistService = waitlistService;
         this.jdbc = jdbc;
     }
@@ -29,6 +31,7 @@ public class WaitlistController {
     // Provide CSRF token to the authenticated frontend
     @GetMapping("/csrf")
     public ResponseEntity<?> getCsrfToken(HttpServletRequest request) {
+
         CsrfToken token = (CsrfToken) request.getAttribute(
             CsrfToken.class.getName()
         );
@@ -110,5 +113,58 @@ public class WaitlistController {
                 .status(HttpStatus.CONFLICT)
                 .body(e.getMessage());
         }
+    }
+
+    // Retrieve waitlists belonging to the logged-in customer
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyWaitlists(
+            Authentication authentication) {
+
+        // Require a logged-in customer
+        if (authentication == null ||
+            !authentication.isAuthenticated()) {
+
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Please log in to view your waitlists.");
+        }
+
+        boolean isCustomer = authentication.getAuthorities().stream()
+            .anyMatch(authority ->
+                "ROLE_CUSTOMER".equals(authority.getAuthority()));
+
+        if (!isCustomer) {
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Only customers can view their waitlists.");
+        }
+
+        // Retrieve customer ID using authenticated username
+        Long customerId;
+
+        try {
+            customerId = jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                authentication.getName()
+            );
+
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Customer account not found.");
+        }
+
+        if (customerId == null) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Customer ID unavailable.");
+        }
+
+        // Retrieve all waitlist entries for this customer
+        List<WaitlistEntry> entries =
+            waitlistService.getCustomerWaitlists(customerId);
+
+        return ResponseEntity.ok(entries);
     }
 }

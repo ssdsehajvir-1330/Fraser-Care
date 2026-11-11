@@ -138,4 +138,17 @@ public class WaitlistService {
 
         return waitlistRepository.save(entry);
     }
+
+    // Retrieve all waitlists joined by a specific customer
+    public List<WaitlistEntry> getCustomerWaitlists(Long customerId) {
+
+        if (customerId == null) {
+            throw new IllegalArgumentException(
+                "Customer ID is required."
+            );
+        }
+
+        return waitlistRepository.
+            findByCustomerIdOrderByJoinedAtDescWaitlistIdDesc(customerId);
+    }
 }
