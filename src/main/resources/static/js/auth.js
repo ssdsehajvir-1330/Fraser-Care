@@ -91,7 +91,8 @@ function navLinksFor(user) {
         ["My Account", "/customer-home.html"],
         ["Book Appointment", "/#booking"],
         ["Self-Check", "/self-check.html"],
-        ["Drug Search", "/drug-search.html"]
+        ["Drug Search", "/drug-search.html"],
+        ["Pickups" , "/pickups.html"]
     ];
 }
 

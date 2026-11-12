@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Pickups | FraserCare</title>
+
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/nav.css">
+    <link rel="stylesheet" href="/css/pickups.css">
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/pickups.js" defer></script>
+</head>
+<body>
+    <!-- Shared top nav (filled in by auth.js) -->
+    <div id="site-nav"></div>
+
+    <main>
+        <section class="card">
+            <h1>My Pickups</h1>
+            <p class="muted">
+                Request a pickup and check when it is ready at the pharmacy.
+            </p>
+        </section>
+
+        <section class="card">
+            <h2>Request a pickup</h2>
+
+            <form id="pickupForm" class="pickup-form">
+                <label for="itemName">Item name</label>
+                <input
+                    type="text"
+                    id="itemName"
+                    minlength="2"
+                    maxlength="100"
+                    placeholder="e.g. Refill: Amoxicillin"
+                    required
+                >
+
+                <label for="notes">Notes (optional)</label>
+                <textarea
+                    id="notes"
+                    maxlength="255"
+                    placeholder="e.g. Picking up after 3 PM"
+                ></textarea>
+
+                <button type="submit" id="submitButton">Submit Request</button>
+            </form>
+
+            <p id="formMessage" class="form-message" role="status"></p>
+        </section>
+
+        <section class="card">
+            <h2>My pickup requests</h2>
+
+            <p id="listMessage" class="muted">Loading your pickups...</p>
+
+            <div class="table-container">
+                <table id="pickupTable" hidden>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Notes</th>
+                            <th>Submitted</th>
+                            <th>Last updated</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pickupRows"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => renderSiteNav());
+    </script>
+</body>
+</html>

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/staff-dashboard.css">
     <link rel="stylesheet" href="/css/nav.css">
     <script src="js/staff-dashboard.js" defer></script>
+    <script src="js/staff-pickups.js" defer></script>
 </head>
 
 <body>
@@ -60,6 +61,50 @@
             <div class="empty-state" id="empty-state" hidden>
                 <h3>No appointments on this date</h3>
                 <p>There are currently no appointments scheduled for the selected date.</p>
+            </div>
+
+        </section>
+
+        
+        <section class="pickups">
+
+            <h2>Pickup Requests</h2>
+            <p>Update customer pickups as they get ready and picked up.</p>
+
+            <div class="feedback-message" id="pickup-message" hidden>
+            </div>
+
+            <div class="date-filter">
+                <label for="pickup-filter">Show:</label>
+                <select id="pickup-filter">
+                    <option value="">All</option>
+                    <option value="RECEIVED">Received</option>
+                    <option value="READY">Ready for pickup</option>
+                    <option value="PICKED_UP">Picked up</option>
+                </select>
+            </div>
+
+            <div class="table-container" id="pickup-table" hidden>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Item</th>
+                            <th>Notes</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="pickup-rows">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" id="pickup-empty" hidden>
+                <h3>No pickup requests</h3>
+                <p>There are no pickup requests to show right now.</p>
             </div>
 
         </section>
