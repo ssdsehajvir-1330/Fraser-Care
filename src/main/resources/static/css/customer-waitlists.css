@@ -1,0 +1,138 @@
+.waitlists-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.waitlists-section-header h2 {
+    margin-top: 0;
+}
+
+.waitlists-section-header .muted {
+    margin-bottom: 0;
+}
+
+.refresh-waitlists-button {
+    background: #ffffff;
+    border: 1px solid #16805d;
+    color: #16805d;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.refresh-waitlists-button:hover {
+    background: #e1f4e9;
+}
+
+.refresh-waitlists-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.waitlists-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.waitlist-card {
+    background: #ffffff;
+    border: 1px solid #e1e8e4;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.waitlist-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.waitlist-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #26332f;
+}
+
+.waitlist-status {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.waitlist-status-waiting {
+    background: #e1f4e9;
+    color: #16805d;
+}
+
+.waitlist-status-notified {
+    background: #fff2d6;
+    color: #8a5b00;
+}
+
+.waitlist-status-other {
+    background: #eef0f2;
+    color: #52635a;
+}
+
+.waitlist-details {
+    margin-top: 14px;
+    color: #52635a;
+    font-size: 14px;
+}
+
+.waitlist-details p {
+    margin: 7px 0;
+}
+
+.waitlist-position {
+    margin: 16px 0 0;
+    font-weight: bold;
+    color: #176b52;
+}
+
+.waitlists-message {
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.waitlists-message:empty {
+    display: none;
+}
+
+.waitlists-message.error {
+    color: #b42318;
+}
+
+.empty-waitlists {
+    color: #69766f;
+    padding: 16px 0;
+}
+
+.waitlists-footer {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #52635a;
+}
+
+.waitlists-footer a {
+    color: #16805d;
+}
+
+@media (max-width: 600px) {
+    .waitlist-card {
+        padding: 16px;
+    }
+
+    .refresh-waitlists-button {
+        width: 100%;
+    }
+}
