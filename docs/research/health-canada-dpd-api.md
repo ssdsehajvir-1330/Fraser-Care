@@ -1,7 +1,7 @@
 # Research: Health Canada Drug Product Database (DPD) API
 
 Owner: Hassaan Nasim
-Status: Iteration 1 research spike
+Status: Iteration 2
 
 ## Why this API
 
@@ -53,7 +53,8 @@ I called the endpoints directly on Nov 1, 2026.
    - `drugproduct/?din=...` returns an **array**.
    - `drugproduct/?id=2049` returns a **single object**, not an array.
    - `status/?id=13452` also returns a single object.
-   - `activeingredient/?id=2049` returns an array, even with one ingredient.
+   - `activeingredient/`, `form/`, `route/`, and `schedule/` with `?id=` all return arrays, even with one item (re-checked Nov 9 with drug code 13452, ADVIL CAPLETS).
+   - `status/?id=` for an unknown drug code still returns an object, just with `status: null`.
 
    So the Java client can't use one response type for every endpoint.
 
@@ -93,6 +94,22 @@ HTTP client: Spring's `RestClient` (already included with `spring-boot-starter-w
 
 Error handling: if Health Canada is down or times out, our endpoint returns **502** with a friendly message instead of a 500 stack trace.
 
+### Product details (Iteration 2)
+
+`GET /api/drugs/{drugCode}` returns one product's details. The page calls it when the customer clicks **Details** on a result, so a search of 50 products doesn't trigger 250 extra API calls.
+
+| Field | DPD endpoint | Example (ADVIL CAPLETS) |
+|-------|--------------|-------------------------|
+| `activeIngredients` (name + strength) | `activeingredient/` | IBUPROFEN 200 MG |
+| `dosageForms` | `form/` | Tablet |
+| `routes` | `route/` | Oral |
+| `schedules` | `schedule/` | NON-PRESCRIPTION DRUGS |
+| `status` | `status/` | Marketed |
+
+- Strength combines `strength` + `strength_unit`, and adds `dosage_value` + `dosage_unit` when they're filled in, so liquids read like "100 MG / 5 ML".
+- If there are no ingredients and the status is `null`, the drug code doesn't exist, and the endpoint returns 404.
+- The same 502 handling applies if Health Canada is down.
+
 ### Notes from implementing it
 
 - Brand names can contain `&` (e.g. "ADVIL COLD & SINUS"). If the value goes straight into the URI template, the `&` breaks the query string. The client passes the search term as a URI variable (`{value}`), so Spring encodes it properly.
@@ -114,7 +131,7 @@ The DPD dataset is published on the Open Government Portal [3]. Health Canada's 
 - [x] Unit tests with mocked HTTP
 
 **Iteration 2–3**
-- [ ] Product details view: active ingredients + strength (`activeingredient/`)
+- [x] Product details view: active ingredients + strength, plus form, route, schedule, and status
 - [ ] Show marketed/cancelled status and hide cancelled products by default
 - [ ] Cache responses (Spring `@Cacheable`)
 - [ ] French support (`lang=fr`)
