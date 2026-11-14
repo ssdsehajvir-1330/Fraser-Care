@@ -3,6 +3,7 @@ package com.cmpt276.frasercare.service;
 import com.cmpt276.frasercare.model.WaitlistEntry;
 import com.cmpt276.frasercare.repository.WaitlistRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -163,13 +164,31 @@ public class WaitlistService {
         return waitlistRepository.save(entry);
     }
 
-    // Allow a customer to leave the waitlist
-    public void leaveWaitlist(Long waitlistId) {
+    // A customer can remove only their own active waitlist entry
+    @Transactional
+    public void leaveWaitlist(Long waitlistId, Long customerId) {
+
+        if (waitlistId == null || customerId == null) {
+            throw new IllegalArgumentException("Waitlist entry not found.");
+        }
 
         WaitlistEntry entry = waitlistRepository.findById(waitlistId)
             .orElseThrow(() -> new IllegalArgumentException(
                 "Waitlist entry not found."
             ));
+
+        if (!customerId.equals(entry.getCustomerId())) {
+            // Same response for unknown IDs and other users' entries
+            throw new IllegalArgumentException("Waitlist entry not found.");
+        }
+
+        // Historical/completed entries should not be deleted
+        if (!"WAITING".equals(entry.getStatus()) &&
+            !"NOTIFIED".equals(entry.getStatus())) {
+            throw new IllegalStateException(
+                "Only waiting or notified entries can be removed."
+            );
+        }
 
         waitlistRepository.delete(entry);
     }

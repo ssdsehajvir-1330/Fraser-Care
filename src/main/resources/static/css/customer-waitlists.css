@@ -136,3 +136,42 @@
         width: 100%;
     }
 }
+
+.waitlists-message.success {
+    color: #176b52;
+}
+
+.waitlist-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.leave-waitlist-button {
+    background: #ffffff;
+    color: #b42318;
+    border: 1px solid #b42318;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.leave-waitlist-button:hover {
+    background: #fde8e7;
+}
+
+.leave-waitlist-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .waitlist-actions {
+        justify-content: stretch;
+    }
+
+    .leave-waitlist-button {
+        width: 100%;
+    }
+}

@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +28,44 @@ public class WaitlistController {
         this.jdbc = jdbc;
     }
 
-    // Provide CSRF token to the authenticated frontend
+    // Check whether the logged-in user is a customer
+    private boolean isCustomer(Authentication authentication) {
+
+        return authentication != null
+            && authentication.isAuthenticated()
+            && authentication.getAuthorities().stream()
+                .anyMatch(authority ->
+                    "ROLE_CUSTOMER".equals(
+                        authority.getAuthority()
+                    )
+                );
+    }
+
+    // Retrieve customer ID from the authenticated account
+    private Long getAuthenticatedCustomerId(
+            Authentication authentication) {
+
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        try {
+            return jdbc.queryForObject(
+                "SELECT user_id FROM auth_users WHERE username = ?",
+                Long.class,
+                authentication.getName()
+            );
+
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    // Provide CSRF token to the frontend
     @GetMapping("/csrf")
-    public ResponseEntity<?> getCsrfToken(HttpServletRequest request) {
+    public ResponseEntity<?> getCsrfToken(
+            HttpServletRequest request) {
 
         CsrfToken token = (CsrfToken) request.getAttribute(
             CsrfToken.class.getName()
@@ -54,12 +89,7 @@ public class WaitlistController {
             @RequestBody WaitlistEntry entry,
             Authentication authentication) {
 
-        // Require a logged-in customer
-        if (authentication == null ||
-            authentication.getAuthorities().stream()
-                .noneMatch(authority ->
-                    "ROLE_CUSTOMER".equals(authority.getAuthority()))) {
-
+        if (!isCustomer(authentication)) {
             return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body("Customer login required.");
@@ -71,28 +101,17 @@ public class WaitlistController {
                 .body("Missing required waitlist information.");
         }
 
-        // Get customer ID from the authenticated account
-        Long customerId;
+        Long customerId = getAuthenticatedCustomerId(
+            authentication
+        );
 
-        try {
-            customerId = jdbc.queryForObject(
-                "SELECT user_id FROM auth_users WHERE username = ?",
-                Long.class,
-                authentication.getName()
-            );
-        } catch (EmptyResultDataAccessException e) {
+        if (customerId == null) {
             return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body("Customer account not found.");
         }
 
-        if (customerId == null) {
-            return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Customer ID unavailable.");
-        }
-
-        // Never trust a customer ID provided by the browser
+        // Always use the authenticated customer ID
         entry.setCustomerId(customerId);
 
         try {
@@ -120,51 +139,84 @@ public class WaitlistController {
     public ResponseEntity<?> getMyWaitlists(
             Authentication authentication) {
 
-        // Require a logged-in customer
         if (authentication == null ||
-            !authentication.isAuthenticated()) {
+                !authentication.isAuthenticated()) {
 
             return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body("Please log in to view your waitlists.");
         }
 
-        boolean isCustomer = authentication.getAuthorities().stream()
-            .anyMatch(authority ->
-                "ROLE_CUSTOMER".equals(authority.getAuthority()));
-
-        if (!isCustomer) {
+        if (!isCustomer(authentication)) {
             return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body("Only customers can view their waitlists.");
         }
 
-        // Retrieve customer ID using authenticated username
-        Long customerId;
+        Long customerId = getAuthenticatedCustomerId(
+            authentication
+        );
 
-        try {
-            customerId = jdbc.queryForObject(
-                "SELECT user_id FROM auth_users WHERE username = ?",
-                Long.class,
-                authentication.getName()
-            );
-
-        } catch (EmptyResultDataAccessException e) {
+        if (customerId == null) {
             return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body("Customer account not found.");
         }
 
-        if (customerId == null) {
-            return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Customer ID unavailable.");
-        }
-
-        // Retrieve all waitlist entries for this customer
         List<WaitlistEntry> entries =
             waitlistService.getCustomerWaitlists(customerId);
 
         return ResponseEntity.ok(entries);
+    }
+
+    // Remove an entry belonging to the logged-in customer
+    @DeleteMapping("/{waitlistId}")
+    public ResponseEntity<?> leaveWaitlist(
+            @PathVariable Long waitlistId,
+            Authentication authentication) {
+
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Please log in to leave a waitlist.");
+        }
+
+        if (!isCustomer(authentication)) {
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Only customers can leave their waitlists.");
+        }
+
+        Long customerId = getAuthenticatedCustomerId(
+            authentication
+        );
+
+        if (customerId == null) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Customer account not found.");
+        }
+
+        try {
+            waitlistService.leaveWaitlist(
+                waitlistId,
+                customerId
+            );
+
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            // Do not reveal another customer's entries
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Waitlist entry not found.");
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(e.getMessage());
+        }
     }
 }

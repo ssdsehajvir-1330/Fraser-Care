@@ -2,7 +2,6 @@ const waitlistsList = document.getElementById("waitlistsList");
 const waitlistsMessage = document.getElementById("waitlistsMessage");
 const refreshWaitlistsButton = document.getElementById("refreshWaitlistsButton");
 
-// Format a date string in more readable format 
 function formatWaitlistDate(dateValue) {
     const [year, month, day] = dateValue.split("-").map(Number);
     const date = new Date(Date.UTC(year, month - 1, day, 12));
@@ -15,7 +14,6 @@ function formatWaitlistDate(dateValue) {
     }).format(date);
 }
 
-// Time string in readable format
 function formatWaitlistTime(timeValue) {
     const [hours, minutes] = timeValue.split(":").map(Number);
     const period = hours >= 12 ? "PM" : "AM";
@@ -24,7 +22,6 @@ function formatWaitlistTime(timeValue) {
     return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
-// Load pharmacy service names from the server and return a map of serviceId to name
 async function loadWaitlistServiceNames() {
     try {
         const response = await fetch("/api/pharmacy-services", {
@@ -49,7 +46,6 @@ async function loadWaitlistServiceNames() {
     }
 }
 
-// Create a waitlist card element for a given entry and service names
 function makeWaitlistCard(entry, serviceNames) {
     const card = document.createElement("article");
     card.className = "waitlist-card";
@@ -104,13 +100,30 @@ function makeWaitlistCard(entry, serviceNames) {
     }
 
     card.append(header, details, position);
+
+    if (status === "WAITING" || status === "NOTIFIED") {
+        const actions = document.createElement("div");
+        actions.className = "waitlist-actions";
+
+        const leaveButton = document.createElement("button");
+        leaveButton.type = "button";
+        leaveButton.className = "leave-waitlist-button";
+        leaveButton.textContent = "Leave Waitlist";
+        leaveButton.addEventListener("click", () => {
+            leaveCustomerWaitlist(entry.waitlistId, leaveButton);
+        });
+
+        actions.appendChild(leaveButton);
+        card.appendChild(actions);
+    }
+
     return card;
 }
 
-// Load customer's waitlists from the server and show them
 async function loadCustomerWaitlists() {
     refreshWaitlistsButton.disabled = true;
     waitlistsMessage.textContent = "";
+    waitlistsMessage.className = "waitlists-message";
     waitlistsList.textContent = "Loading your waitlists...";
 
     try {
@@ -145,7 +158,7 @@ async function loadCustomerWaitlists() {
             emptyMessage.className = "empty-waitlists";
             emptyMessage.textContent = "You haven't joined any waitlists yet.";
             waitlistsList.appendChild(emptyMessage);
-            return;
+            return true;
         }
 
         const serviceNames = await loadWaitlistServiceNames();
@@ -153,12 +166,70 @@ async function loadCustomerWaitlists() {
         entries.forEach(entry => {
             waitlistsList.appendChild(makeWaitlistCard(entry, serviceNames));
         });
+        return true;
     } catch (error) {
         waitlistsList.replaceChildren();
         waitlistsMessage.textContent = error.message;
         waitlistsMessage.className = "waitlists-message error";
+        return false;
     } finally {
         refreshWaitlistsButton.disabled = false;
+    }
+}
+
+async function leaveCustomerWaitlist(waitlistId, button) {
+    const confirmed = window.confirm(
+        "Are you sure you want to leave this waitlist? Your position will be lost."
+    );
+    if (!confirmed) {
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Leaving...";
+
+    try {
+        // The project uses CSRF protection for requests that change data
+        const csrfResponse = await fetch("/csrf", {
+            credentials: "same-origin",
+            headers: { Accept: "application/json" }
+        });
+
+        if (!csrfResponse.ok || csrfResponse.redirected) {
+            throw new Error("Unable to verify your session. Please log in again.");
+        }
+        const csrf = await csrfResponse.json();
+
+        const response = await fetch(`/api/waitlist/${waitlistId}`, {
+            method: "DELETE",
+            credentials: "same-origin",
+            headers: {
+                Accept: "application/json",
+                [csrf.headerName]: csrf.token
+            }
+        });
+
+        if (response.status === 401 || response.redirected) {
+            throw new Error("Please log in again to leave this waitlist.");
+        }
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(message || "Unable to leave this waitlist.");
+        }
+
+        const refreshed = await loadCustomerWaitlists();
+        waitlistsMessage.className = refreshed
+            ? "waitlists-message success"
+            : "waitlists-message error";
+        waitlistsMessage.textContent = refreshed
+            ? "You left the waitlist successfully."
+            : "You left the waitlist, but the list could not refresh. Please reload the page.";
+
+    } catch (error) {
+        waitlistsMessage.className = "waitlists-message error";
+        waitlistsMessage.textContent = error.message;
+        button.disabled = false;
+        button.textContent = "Leave Waitlist";
     }
 }
 
