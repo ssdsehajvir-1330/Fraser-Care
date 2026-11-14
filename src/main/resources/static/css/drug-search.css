@@ -62,3 +62,36 @@ th, td {
 th {
     background: #e8f3f7;
 }
+
+.details-button {
+    padding: 4px 10px;
+    font-size: 0.85rem;
+}
+
+.details-row td {
+    background: #f8fbfc;
+}
+
+.details-row dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 16px;
+    margin: 0;
+}
+
+.details-row dt {
+    font-weight: 600;
+    color: #4b5b66;
+}
+
+.details-row dd {
+    margin: 0;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}

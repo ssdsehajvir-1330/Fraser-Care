@@ -1,0 +1,81 @@
+/* Customer pickup page */
+
+.pickup-form label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.pickup-form input,
+.pickup-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5dfd9;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.pickup-form textarea {
+    min-height: 70px;
+    resize: vertical;
+}
+
+.pickup-form button {
+    margin-top: 16px;
+    padding: 10px 20px;
+    background: #16805d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.pickup-form button:hover {
+    background: #106747;
+}
+
+.pickup-form button:disabled {
+    background: #94a3a8;
+    cursor: not-allowed;
+}
+
+.form-message {
+    margin-top: 14px;
+    font-size: 14px;
+}
+
+.form-message.success {
+    color: #16805d;
+}
+
+.form-message.error {
+    color: #b42318;
+}
+
+/* Status badges */
+.pickup-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.pickup-status.received {
+    background: #eef2f6;
+    color: #475467;
+}
+
+.pickup-status.ready {
+    background: #fff4d6;
+    color: #8a5a00;
+}
+
+.pickup-status.picked_up {
+    background: #e1f4e9;
+    color: #16805d;
+}

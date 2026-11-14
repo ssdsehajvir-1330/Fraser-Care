@@ -30,6 +30,42 @@ public class HealthCanadaDrugClient {
         return fetchProducts("din", din);
     }
 
+    public List<DpdActiveIngredient> getActiveIngredients(long drugCode) {
+        return fetchList("/activeingredient/", drugCode, DpdActiveIngredient[].class);
+    }
+
+    public List<DpdDosageForm> getDosageForms(long drugCode) {
+        return fetchList("/form/", drugCode, DpdDosageForm[].class);
+    }
+
+    public List<DpdRoute> getRoutes(long drugCode) {
+        return fetchList("/route/", drugCode, DpdRoute[].class);
+    }
+
+    public List<DpdSchedule> getSchedules(long drugCode) {
+        return fetchList("/schedule/", drugCode, DpdSchedule[].class);
+    }
+
+    // Unlike the other endpoints, status/?id= returns a single object
+    public DpdStatus getStatus(long drugCode) {
+        return getByDrugCode("/status/", drugCode).body(DpdStatus.class);
+    }
+
+    private <T> List<T> fetchList(String path, long drugCode, Class<T[]> type) {
+        T[] items = getByDrugCode(path, drugCode).body(type);
+        return items == null ? List.of() : List.of(items);
+    }
+
+    private RestClient.ResponseSpec getByDrugCode(String path, long drugCode) {
+        return restClient.get()
+                .uri(uri -> uri.path(path)
+                        .queryParam("id", drugCode)
+                        .queryParam("lang", "en")
+                        .queryParam("type", "json")
+                        .build())
+                .retrieve();
+    }
+
     private List<DpdDrugProduct> fetchProducts(String param, String value) {
         DpdDrugProduct[] products = restClient.get()
                 .uri(uri -> uri.path("/drugproduct/")

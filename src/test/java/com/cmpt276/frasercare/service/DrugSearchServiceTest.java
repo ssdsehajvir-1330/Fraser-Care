@@ -1,10 +1,12 @@
 package com.cmpt276.frasercare.service;
 
-import com.cmpt276.frasercare.client.DpdDrugProduct;
-import com.cmpt276.frasercare.client.HealthCanadaDrugClient;
+import com.cmpt276.frasercare.client.*;
+import com.cmpt276.frasercare.model.ActiveIngredient;
+import com.cmpt276.frasercare.model.DrugProductDetails;
 import com.cmpt276.frasercare.model.DrugProductSummary;
 import org.junit.jupiter.api.Test;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,5 +61,42 @@ class DrugSearchServiceTest {
         when(client.searchByBrandName("vitamin")).thenReturn(many);
 
         assertEquals(DrugSearchService.MAX_RESULTS, service.searchByBrandName("vitamin").size());
+    }
+
+    @Test
+    void detailsCombineIngredientsFormRouteScheduleAndStatus() {
+        when(client.getActiveIngredients(13452)).thenReturn(List.of(new DpdActiveIngredient("IBUPROFEN", "200", "MG", "", "")));
+        when(client.getStatus(13452)).thenReturn(new DpdStatus("Marketed", "2026-09-09"));
+        when(client.getDosageForms(13452)).thenReturn(List.of(new DpdDosageForm("Tablet")));
+        when(client.getRoutes(13452)).thenReturn(List.of(new DpdRoute("Oral")));
+        when(client.getSchedules(13452)).thenReturn(List.of(new DpdSchedule("NON-PRESCRIPTION DRUGS")));
+
+        DrugProductDetails details = service.getDetails(13452);
+
+        assertEquals(List.of(new ActiveIngredient("IBUPROFEN", "200 MG")), details.activeIngredients());
+        assertEquals(List.of("Tablet"), details.dosageForms());
+        assertEquals(List.of("Oral"), details.routes());
+        assertEquals(List.of("NON-PRESCRIPTION DRUGS"), details.schedules());
+        assertEquals("Marketed", details.status());
+    }
+
+    @Test
+    void liquidStrengthIncludesVolume() {
+        assertEquals("100 MG / 5 ML", DrugSearchService.formatStrength(new DpdActiveIngredient("IBUPROFEN", "100", "MG", "5", "ML")));
+        assertEquals("0.5 %", DrugSearchService.formatStrength(new DpdActiveIngredient("HYDROCORTISONE", "0.5", "%", null, "")));
+    }
+
+    @Test
+    void unknownDrugCodeIsNotFound() {
+        when(client.getActiveIngredients(99999999)).thenReturn(List.of());
+        when(client.getStatus(99999999)).thenReturn(new DpdStatus(null, null));
+
+        assertThrows(NoSuchElementException.class, () -> service.getDetails(99999999));
+    }
+
+    @Test
+    void nonPositiveDrugCodeIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> service.getDetails(0));
+        verifyNoInteractions(client);
     }
 }
