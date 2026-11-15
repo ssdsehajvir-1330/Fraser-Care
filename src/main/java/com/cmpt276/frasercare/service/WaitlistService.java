@@ -145,11 +145,17 @@ public class WaitlistService {
             entry.getStartTime()
         );
 
-        // Stop the same customer from joining twice
+        // Prevent duplicate registrations for active waitlist entries
         for (WaitlistEntry existing : existingEntries) {
-            if (existing.getCustomerId().equals(entry.getCustomerId())
-                    && "WAITING".equals(existing.getStatus())) {
 
+            boolean sameCustomer =
+                existing.getCustomerId().equals(entry.getCustomerId());
+
+            boolean activeEntry =
+                "WAITING".equals(existing.getStatus()) ||
+                "NOTIFIED".equals(existing.getStatus());
+
+            if (sameCustomer && activeEntry) {
                 throw new IllegalStateException(
                     "Customer is already on this waitlist."
                 );
