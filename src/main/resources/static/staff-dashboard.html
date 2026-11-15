@@ -6,9 +6,11 @@
     <title>Staff Dashboard | FraserCare</title>
 
     <link rel="stylesheet" href="css/staff-dashboard.css">
+    <link rel="stylesheet" href="css/staff-waitlists.css">
     <link rel="stylesheet" href="/css/nav.css">
     <script src="js/staff-dashboard.js" defer></script>
     <script src="js/staff-pickups.js" defer></script>
+    <script src="js/staff-waitlists.js" defer></script>
 </head>
 
 <body>
@@ -28,13 +30,16 @@
             <h2 id="appointment-count">0</h2>
         </section>
 
+        <!-- Appointment Schedule -->
         <section class="appointments">
 
             <h2>Appointment Schedule</h2>
             <p>View scheduled appointments for the selected date.</p>
 
-           <!-- Loading and error messages -->
-            <div class="feedback-message" id="feedback-message" hidden>
+            <!-- Loading and error messages -->
+            <div class="feedback-message"
+                 id="feedback-message"
+                 hidden>
             </div>
 
             <div class="date-filter">
@@ -60,31 +65,124 @@
 
             <div class="empty-state" id="empty-state" hidden>
                 <h3>No appointments on this date</h3>
-                <p>There are currently no appointments scheduled for the selected date.</p>
+                <p>
+                    There are currently no appointments
+                    scheduled for the selected date.
+                </p>
             </div>
 
         </section>
 
-        
+        <!-- Staff Waitlist Management -->
+        <section class="pickups staff-waitlists">
+
+            <h2>Waitlist Management</h2>
+            <p>
+                View customers waiting for appointments and
+                notify the next eligible customer when a slot
+                becomes available.
+            </p>
+
+            <!-- Success and error messages -->
+            <div class="feedback-message"
+                 id="staff-waitlist-message"
+                 role="status"
+                 aria-live="polite"
+                 hidden>
+            </div>
+
+            <!-- Date selection and refresh -->
+            <div class="date-filter">
+
+                <label for="staff-waitlist-date">
+                    Select date:
+                </label>
+
+                <input type="date" id="staff-waitlist-date">
+
+                <button type="button"
+                        id="staff-waitlist-refresh"
+                        class="pickup-action">
+                    Refresh
+                </button>
+
+            </div>
+
+            <!-- Waitlist entries -->
+            <div class="table-container"
+                 id="staff-waitlist-table"
+                 hidden>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Customer</th>
+                            <th>Pharmacy Service</th>
+                            <th>Status</th>
+                            <th>Queue Position</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="staff-waitlist-rows">
+                    </tbody>
+                </table>
+
+            </div>
+
+            <!-- Empty waitlist message -->
+            <div class="empty-state"
+                 id="staff-waitlist-empty"
+                 hidden>
+
+                <h3>No waitlist entries</h3>
+
+                <p>
+                    There are no customers waiting for
+                    appointments on the selected date.
+                </p>
+
+            </div>
+
+            <p class="staff-waitlist-note">
+                Notifying a customer updates their waitlist
+                status but does not reserve an appointment.
+            </p>
+
+        </section>
+
+        <!-- Pickup Requests -->
         <section class="pickups">
 
             <h2>Pickup Requests</h2>
-            <p>Update customer pickups as they get ready and picked up.</p>
+            <p>
+                Update customer pickups as they get ready
+                and picked up.
+            </p>
 
-            <div class="feedback-message" id="pickup-message" hidden>
+            <div class="feedback-message"
+                 id="pickup-message"
+                 hidden>
             </div>
 
             <div class="date-filter">
+
                 <label for="pickup-filter">Show:</label>
+
                 <select id="pickup-filter">
                     <option value="">All</option>
                     <option value="RECEIVED">Received</option>
                     <option value="READY">Ready for pickup</option>
                     <option value="PICKED_UP">Picked up</option>
                 </select>
+
             </div>
 
-            <div class="table-container" id="pickup-table" hidden>
+            <div class="table-container"
+                 id="pickup-table"
+                 hidden>
+
                 <table>
                     <thead>
                         <tr>
@@ -100,11 +198,20 @@
                     <tbody id="pickup-rows">
                     </tbody>
                 </table>
+
             </div>
 
-            <div class="empty-state" id="pickup-empty" hidden>
+            <div class="empty-state"
+                 id="pickup-empty"
+                 hidden>
+
                 <h3>No pickup requests</h3>
-                <p>There are no pickup requests to show right now.</p>
+
+                <p>
+                    There are no pickup requests to show
+                    right now.
+                </p>
+
             </div>
 
         </section>
