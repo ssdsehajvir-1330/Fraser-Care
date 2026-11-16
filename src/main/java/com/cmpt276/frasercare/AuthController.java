@@ -100,11 +100,13 @@ public class AuthController {
                 .body("All fields are required.");
         }
 
-        String fullName = request.fullName().trim();
-        if (!fullName.matches("[A-Za-z ]+")) {
+     String fullName = request.fullName().trim();
+     // Must start with a letter; allows names like O'Brien and José
+        if (!fullName.matches("\\p{L}[\\p{L} .'-]*")) {
             return ResponseEntity.badRequest()
-                .body("Full name must contain only letters and spaces.");
-}
+                .body("Name must start with a letter and use only letters, spaces, apostrophes, hyphens or periods.");
+        }
+
         String email = request.email().trim()
             .toLowerCase(Locale.ROOT);
 
