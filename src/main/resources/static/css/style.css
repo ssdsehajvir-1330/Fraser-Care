@@ -314,3 +314,33 @@ footer {
         padding: 25px;
     }
 }
+
+.service-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.account-appointments {
+    background: var(--background);
+    padding: 80px 8%;
+    text-align: center;
+}
+
+.account-appointments h2 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.account-appointments > .muted {
+    color: var(--muted);
+    margin-bottom: 35px;
+}
+
+.account-appointments .appointments-list {
+    max-width: 1050px;
+    margin: 0 auto;
+}
+

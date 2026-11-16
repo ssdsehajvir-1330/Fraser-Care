@@ -1,6 +1,25 @@
 const appointmentsList = document.getElementById("appointmentsList");
 const appointmentsMessage = document.getElementById("appointmentsMessage");
 
+let currentBookingTab = "upcoming";
+
+const upcomingTab = document.getElementById("upcomingTab");
+const pastTab = document.getElementById("pastTab");
+
+upcomingTab.addEventListener("click", () => {
+    currentBookingTab = "upcoming";
+    upcomingTab.classList.add("active");
+    pastTab.classList.remove("active");
+    loadCustomerAppointments();
+});
+
+pastTab.addEventListener("click", () => {
+    currentBookingTab = "past";
+    pastTab.classList.add("active");
+    upcomingTab.classList.remove("active");
+    loadCustomerAppointments();
+});
+
 function showAppointmentMessage(message, isError = false) {
     appointmentsMessage.textContent = message;
     appointmentsMessage.className = isError
@@ -79,7 +98,23 @@ async function loadCustomerAppointments() {
         throw new Error("Unable to retrieve appointment information.");
     }
 
-    const appointments = await response.json();
+    const allAppointments = await response.json();
+
+    const appointments = allAppointments.filter(appointment => {
+        const status = String(appointment.status || "").toUpperCase();
+
+        // Cancelled bookings should not appear for customers.
+        if (status === "CANCELLED") {
+            return false;
+        }
+
+        const isUpcoming =
+            status === "BOOKED" && isFutureAppointment(appointment);
+
+        return currentBookingTab === "upcoming"
+            ? isUpcoming
+            : !isUpcoming;
+    });
 
     let services = [];
 
@@ -111,91 +146,123 @@ async function loadCustomerAppointments() {
     if (appointments.length === 0) {
         const emptyMessage = document.createElement("p");
         emptyMessage.className = "empty-appointments";
-        emptyMessage.textContent =
-            "You don't have any appointments yet. Book an appointment to get started.";
+        emptyMessage.textContent = currentBookingTab === "upcoming"
+            ? "You have no upcoming appointments."
+            : "You have no past bookings.";
 
         appointmentsList.appendChild(emptyMessage);
         return;
     }
 
+    
+    const tableWrapper = document.createElement("div");
+    tableWrapper.className = "appointment-table-wrapper";
+
+    const table = document.createElement("table");
+    table.className = "appointment-table";
+
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+    `;
+
+    const tbody = document.createElement("tbody");
+
     appointments.forEach(appointment => {
-        const card = document.createElement("article");
-        card.className = "appointment-card";
+        const row = document.createElement("tr");
 
-        const header = document.createElement("div");
-        header.className = "appointment-card-header";
-
-        const serviceName = document.createElement("h3");
-        serviceName.textContent =
+        const service = document.createElement("td");
+        service.textContent =
             serviceNames.get(String(appointment.serviceId)) ||
             `Pharmacy Service #${appointment.serviceId}`;
 
+        const date = document.createElement("td");
+        date.textContent =
+            formatAppointmentDate(appointment.appointmentDate);
+
+        const time = document.createElement("td");
+        time.textContent =
+            `${formatAppointmentTime(appointment.startTime)} - ${formatAppointmentTime(appointment.endTime)}`;
+
+        const statusCell = document.createElement("td");
+
         const status = String(appointment.status || "").toUpperCase();
 
-        const statusBadge = document.createElement("span");
-        statusBadge.className = "appointment-status";
+        const badge = document.createElement("span");
+        badge.className = "appointment-status";
 
         if (status === "BOOKED") {
-            statusBadge.classList.add("status-booked");
+            badge.classList.add("status-booked");
         } else if (status === "CANCELLED") {
-            statusBadge.classList.add("status-cancelled");
+            badge.classList.add("status-cancelled");
         } else {
-            statusBadge.classList.add("status-other");
+            badge.classList.add("status-other");
         }
 
-        statusBadge.textContent = status;
+        badge.textContent = status;
+        statusCell.appendChild(badge);
 
-        header.append(serviceName, statusBadge);
-
-        const details = document.createElement("div");
-        details.className = "appointment-details";
-
-        const date = document.createElement("p");
-        date.textContent =
-            `Date: ${formatAppointmentDate(appointment.appointmentDate)}`;
-
-        const time = document.createElement("p");
-        time.textContent =
-            `Time: ${formatAppointmentTime(appointment.startTime)} - ${formatAppointmentTime(appointment.endTime)}`;
-
-        const confirmation = document.createElement("p");
-        confirmation.textContent =
-            `Confirmation #${appointment.appointmentId}`;
-
-        details.append(date, time, confirmation);
-
-        card.append(header, details);
+        const actions = document.createElement("td");
 
         if (status === "BOOKED" && isFutureAppointment(appointment)) {
-            const actions = document.createElement("div");
-            actions.className = "appointment-actions";
-
             const cancelButton = document.createElement("button");
             cancelButton.type = "button";
             cancelButton.className = "cancel-appointment-button";
-            cancelButton.textContent = "Cancel Appointment";
+            cancelButton.textContent = "Cancel";
 
             cancelButton.addEventListener("click", () => {
-                cancelAppointment(appointment.appointmentId, cancelButton);
+            const confirmation = document.createElement("div");
+            confirmation.className = "cancel-confirmation";
+
+            const message = document.createElement("span");
+            message.textContent = "Sure?";
+
+            const yesButton = document.createElement("button");
+            yesButton.type = "button";
+            yesButton.className = "confirm-yes";
+            yesButton.textContent = "Yes";
+
+            const noButton = document.createElement("button");
+            noButton.type = "button";
+            noButton.className = "confirm-no";
+            noButton.textContent = "No";
+
+            confirmation.append(message, yesButton, noButton);
+            actions.replaceChildren(confirmation);
+
+            noButton.addEventListener("click", () => {
+                actions.replaceChildren(cancelButton);
             });
 
+    yesButton.addEventListener("click", () => {
+        cancelAppointment(appointment.appointmentId, yesButton);
+    });
+});
+
             actions.appendChild(cancelButton);
-            card.appendChild(actions);
+        } else {
+            actions.textContent = "—";
         }
 
-        appointmentsList.appendChild(card);
+        row.append(service, date, time, statusCell, actions);
+        tbody.appendChild(row);
     });
+
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    appointmentsList.appendChild(tableWrapper);
+
 }
 
 async function cancelAppointment(appointmentId, button) {
 
-    const confirmed = window.confirm(
-        "Are you sure you want to cancel this appointment? This action cannot be undone."
-    );
-
-    if (!confirmed) {
-        return;
-    }
 
     button.disabled = true;
     button.textContent = "Cancelling...";
@@ -243,9 +310,12 @@ async function cancelAppointment(appointmentId, button) {
         try {
             await loadCustomerAppointments();
 
-            showAppointmentMessage(
-                `Appointment #${appointmentId} was cancelled successfully!`
-            );
+            showAppointmentMessage(`Appointment cancelled successfully!`);
+
+            setTimeout(() => {
+                showAppointmentMessage("");
+            }, 2000);
+
         } catch (refreshError) {
             showAppointmentMessage(
                 "Your appointment was cancelled, but the list could not refresh. Please reload the page.",
