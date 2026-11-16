@@ -90,8 +90,8 @@
                     name="fullName"
                     placeholder="Full Name"
                     autocomplete="name"
-                    pattern="[A-Za-z ]+"
-                    title="Name must contain only letters and spaces."
+                    pattern="\p{L}[\p{L} .'\-]*"
+                    title="Name must start with a letter and use only letters, spaces, apostrophes, hyphens or periods."
                     required>
 
             <input type="email"

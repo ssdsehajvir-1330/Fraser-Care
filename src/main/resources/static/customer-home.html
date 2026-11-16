@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/auth.css">
     <link rel="stylesheet" href="/css/nav.css">
     <link rel="stylesheet" href="/css/customer-appointments.css">
+    <link rel="stylesheet" href="/css/customer-waitlists.css">
 
     <style>
         main {
@@ -52,6 +53,7 @@
 
     <script src="/js/auth.js" defer></script>
     <script src="/js/customer-appointments.js" defer></script>
+    <script src="/js/customer-waitlists.js" defer></script>
 </head>
 <body>
     <div id="site-nav"></div>
@@ -94,6 +96,39 @@
             </div>
         </section>
 
+        <section class="card">
+            <div class="waitlists-section-header">
+                <div>
+                    <h2>My Waitlists</h2>
+                    <p class="muted">
+                        View the appointment slots you're waiting for and your position in line.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    id="refreshWaitlistsButton"
+                    class="refresh-waitlists-button">
+                    Refresh
+                </button>
+            </div>
+
+            <div
+                id="waitlistsMessage"
+                class="waitlists-message"
+                role="status"
+                aria-live="polite">
+            </div>
+
+            <div id="waitlistsList" class="waitlists-list">
+                Loading your waitlists...
+            </div>
+
+            <p class="waitlists-footer">
+                Looking for another appointment time?
+                <a href="/waitlist.html">Join a waitlist</a>
+            </p>
+        </section>
+
         <section class="how-it-works">
             <h2>Explore FraserCare Services</h2>
 
@@ -116,7 +151,6 @@
                     My Pickups
                 </a>
             </div>
-        </section>
     </main>
 
      <footer>
