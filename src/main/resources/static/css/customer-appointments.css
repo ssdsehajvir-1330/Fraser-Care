@@ -4,21 +4,6 @@
     margin-top: 20px;
 }
 
-.appointment-card {
-    background: #ffffff;
-    border: 1px solid #e1e8e4;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.appointment-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
 .appointment-card-header h3 {
     margin: 0;
     font-size: 18px;
@@ -56,12 +41,6 @@
 
 .appointment-details p {
     margin: 7px 0;
-}
-
-.appointment-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
 }
 
 .cancel-appointment-button {
@@ -119,3 +98,145 @@
         width: 100%;
     }
 }
+
+/* Compact appointments table */
+
+.appointment-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.appointment-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    text-align: center;
+    font-size: 14px;
+}
+
+.appointment-table th,
+.appointment-table td {
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+}
+
+.appointment-table th {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.appointment-table td {
+    color: var(--text);
+}
+
+.appointment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.appointment-table tbody tr:hover {
+    background: var(--background);
+}
+
+.appointment-table .cancel-appointment-button {
+    padding: 7px 12px;
+    font-size: 13px;
+}
+
+/* Upcoming and Past Bookings tabs */
+
+.booking-tabs {
+    display: flex;
+    background: #e8eeea;
+    padding: 5px;
+    border-radius: 10px;
+    max-width: 600px;
+    margin: 30px auto;
+    gap: 5px;
+}
+
+.booking-tabs button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.booking-tabs button.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.booking-tabs button:hover:not(.active) {
+    background: var(--light-green);
+}
+.cancel-confirmation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--light-green);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.cancel-confirmation span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+}
+
+.cancel-confirmation button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.confirm-yes {
+    background: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+}
+
+.confirm-no {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+/* Keep table columns from resizing */
+
+
+.appointment-table th:last-child,
+.appointment-table td:last-child {
+    width: 180px;
+    text-align: center;
+}
+

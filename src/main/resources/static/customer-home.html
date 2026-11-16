@@ -3,12 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Account | FraserCare</title>
+    <title>FraserCare | My Account</title>
 
+    <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/auth.css">
     <link rel="stylesheet" href="/css/nav.css">
     <link rel="stylesheet" href="/css/customer-appointments.css">
     <link rel="stylesheet" href="/css/customer-waitlists.css">
+
+    <style>
+        main {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main > .card:first-child {
+            background-color: var(--light-green);
+        }
+
+        main > .hero {
+            width: 100%;
+            border-radius: 0;
+        }
+
+        main > .how-it-works {
+            flex: 1;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        footer {
+            margin-bottom: 0;
+        }
+
+        main > .card { 
+            width: 100%; 
+            max-width: 1050px;
+            margin: 30px auto; 
+            box-sizing: border-box; 
+        }
+    
+    </style>
 
     <script src="/js/auth.js" defer></script>
     <script src="/js/customer-appointments.js" defer></script>
@@ -18,7 +62,7 @@
     <div id="site-nav"></div>
 
     <main>
-        <section class="card">
+        <section class="hero">
             <p class="eyebrow">YOUR FRASERCARE ACCOUNT</p>
             <h1>Welcome back, <span class="user-name"></span>!</h1>
             <p class="muted">
@@ -27,11 +71,21 @@
             </p>
         </section>
 
-        <section class="card">
+        <section class="account-appointments">
             <h2>My Appointments</h2>
             <p class="muted">
                 View your appointments and manage upcoming bookings.
             </p>
+
+            <div class="booking-tabs">
+                <button id="upcomingTab" class="active" type="button">
+                    Upcoming Bookings
+                </button>
+
+                <button id="pastTab" type="button">
+                    Past Bookings
+                </button>
+            </div>
 
             <div
                 id="appointmentsMessage"
@@ -78,16 +132,34 @@
             </p>
         </section>
 
-        <section class="card">
-            <h2>What you can do</h2>
-            <ul>
-                <li><a href="/#booking">Book an appointment</a></li>
-                <li><a href="/self-check.html">Take the self-check</a> to find the right service</li>
-                <li><a href="/drug-search.html">Search Canadian drug products</a></li>
-                <li><a href="/pickups.html">Track your pickups</a></li>
-            </ul>
+        <section class="how-it-works">
+            <h2>Explore FraserCare Services</h2>
+
+            <p>Access our pharmacy services quickly and easily.</p>
+
+            <div class="service-buttons">
+                <a href="/#booking" class="primary-button">
+                    Book an Appointment
+                </a>
+
+                <a href="/self-check.html" class="primary-button">
+                    Self-Check
+                </a>
+
+                <a href="/drug-search.html" class="primary-button">
+                    Drug Search
+                </a>
+
+                <a href="/pickups.html" class="primary-button">
+                    My Pickups
+                </a>
+            </div>
         </section>
     </main>
+
+     <footer>
+        <p>FraserCare | CMPT 276 Group Project</p>
+    </footer>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => renderSiteNav());
