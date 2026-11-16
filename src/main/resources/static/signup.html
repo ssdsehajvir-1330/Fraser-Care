@@ -87,10 +87,12 @@
 
         <form id="signupForm">
             <input type="text"
-                   name="fullName"
-                   placeholder="Full Name"
-                   autocomplete="name"
-                   required>
+                    name="fullName"
+                    placeholder="Full Name"
+                    autocomplete="name"
+                    pattern="[A-Za-z ]+"
+                    title="Name must contain only letters and spaces."
+                    required>
 
             <input type="email"
                    name="email"

@@ -101,6 +101,10 @@ public class AuthController {
         }
 
         String fullName = request.fullName().trim();
+        if (!fullName.matches("[A-Za-z ]+")) {
+            return ResponseEntity.badRequest()
+                .body("Full name must contain only letters and spaces.");
+}
         String email = request.email().trim()
             .toLowerCase(Locale.ROOT);
 
