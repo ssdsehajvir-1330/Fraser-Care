@@ -103,11 +103,6 @@ async function loadCustomerAppointments() {
     const appointments = allAppointments.filter(appointment => {
         const status = String(appointment.status || "").toUpperCase();
 
-        // Cancelled bookings should not appear for customers.
-        if (status === "CANCELLED") {
-            return false;
-        }
-
         const isUpcoming =
             status === "BOOKED" && isFutureAppointment(appointment);
 
@@ -327,7 +322,9 @@ async function cancelAppointment(appointmentId, button) {
         showAppointmentMessage(error.message, true);
 
         button.disabled = false;
-        button.textContent = "Cancel Appointment";
+        button.textContent = "Yes";
+
+        await loadCustomerAppointments();
     }
 }
 

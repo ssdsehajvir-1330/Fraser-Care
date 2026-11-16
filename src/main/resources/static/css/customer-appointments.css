@@ -4,21 +4,6 @@
     margin-top: 20px;
 }
 
-.appointment-card {
-    background: #ffffff;
-    border: 1px solid #e1e8e4;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.appointment-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
 .appointment-card-header h3 {
     margin: 0;
     font-size: 18px;
@@ -56,12 +41,6 @@
 
 .appointment-details p {
     margin: 7px 0;
-}
-
-.appointment-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
 }
 
 .cancel-appointment-button {
@@ -133,7 +112,8 @@
 .appointment-table {
     width: 100%;
     border-collapse: collapse;
-    text-align: left;
+    table-layout: fixed;
+    text-align: center;
     font-size: 14px;
 }
 
@@ -141,12 +121,14 @@
 .appointment-table td {
     padding: 15px 18px;
     border-bottom: 1px solid var(--border);
+    text-align: center;
 }
 
 .appointment-table th {
     color: var(--muted);
     font-size: 13px;
     font-weight: 600;
+    text-align: center;
 }
 
 .appointment-table td {
@@ -203,8 +185,11 @@
 .cancel-confirmation {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px;
+    width: 100%;
+    box-sizing: border-box;
     background: var(--light-green);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -215,13 +200,23 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text);
+    text-align: center;
 }
 
 .cancel-confirmation button {
-    padding: 5px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
     border-radius: 5px;
     font-size: 12px;
     font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    flex-shrink: 0;
     cursor: pointer;
 }
 
@@ -238,10 +233,6 @@
 }
 /* Keep table columns from resizing */
 
-.appointment-table {
-    table-layout: fixed;
-    width: 100%;
-}
 
 .appointment-table th:last-child,
 .appointment-table td:last-child {
@@ -249,42 +240,3 @@
     text-align: center;
 }
 
-/* Keep confirmation compact and centered */
-
-.cancel-confirmation {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px;
-    width: 100%;
-    box-sizing: border-box;
-    white-space: nowrap;
-}
-
-.cancel-confirmation span {
-    font-size: 12px;
-    text-align: center;
-}
-
-.cancel-confirmation button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 28px;
-    padding: 0;
-    margin: 0;
-    line-height: 1;
-    text-align: center;
-    flex-shrink: 0;
-}
-/* Center all table headings */
-.appointment-table th {
-    text-align: center;
-}
-/* Center table headings and appointment details */
-.appointment-table th,
-.appointment-table td {
-    text-align: center;
-}

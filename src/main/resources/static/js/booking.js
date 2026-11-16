@@ -305,13 +305,14 @@ bookingForm.addEventListener("submit", async event => {
             throw new Error(errorMessage || "Unable to book appointment.");
         }
 
-        const bookedAppointment = await response.json();
+        await response.json();
 
-        await loadAvailableTimes();
+        showMessage("Appointment booked successfully!");
 
-        showMessage(
-        `Appointment booked successfully! Confirmation #${bookedAppointment.appointmentId}`
-    );
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+
 
     } catch (error) {
         showMessage(error.message, true);

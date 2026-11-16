@@ -22,10 +22,6 @@
             flex-direction: column;
         }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-        }
         main > .card:first-child {
             background-color: var(--light-green);
         }
@@ -46,7 +42,14 @@
         }
 
         footer {
-        margin-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        main > .card { 
+            width: 100%; 
+            max-width: 1050px;
+            margin: 30px auto; 
+            box-sizing: border-box; 
         }
     
     </style>
@@ -151,6 +154,7 @@
                     My Pickups
                 </a>
             </div>
+        </section>
     </main>
 
      <footer>
