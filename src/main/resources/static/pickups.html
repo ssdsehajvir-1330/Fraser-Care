@@ -8,8 +8,22 @@
     <link rel="stylesheet" href="/css/auth.css">
     <link rel="stylesheet" href="/css/nav.css">
     <link rel="stylesheet" href="/css/pickups.css">
+    <link rel="stylesheet" href="/css/style.css">
     <script src="/js/auth.js" defer></script>
     <script src="/js/pickups.js" defer></script>
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+    </style>
+    
 </head>
 <body>
     <!-- Shared top nav (filled in by auth.js) -->
@@ -72,6 +86,10 @@
         </section>
     </main>
 
+    <footer>
+        <p>FraserCare | CMPT 276 Group Project</p>
+    </footer>
+    
     <script>
         document.addEventListener("DOMContentLoaded", () => renderSiteNav());
     </script>

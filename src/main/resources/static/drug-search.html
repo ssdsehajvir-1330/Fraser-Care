@@ -6,6 +6,20 @@
     <title>Drug Product Search | FraserCare</title>
     <link rel="stylesheet" href="/css/drug-search.css">
     <link rel="stylesheet" href="/css/nav.css">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+    </style>
+
 </head>
 <body>
     <div id="site-nav"></div>
@@ -40,6 +54,11 @@
 
         <p class="source">Data from Health Canada's Drug Product Database. This is product information only, not medical advice.</p>
     </main>
+
+    <footer>
+        <p>FraserCare | CMPT 276 Group Project</p>
+    </footer>
+
     <script src="/js/drug-search.js"></script>
     <script src="/js/auth.js"></script>
     <script>renderSiteNav();</script>
