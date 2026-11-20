@@ -4,6 +4,8 @@ import com.cmpt276.frasercare.model.PickupRequest;
 import com.cmpt276.frasercare.repository.PickupRequestRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -16,6 +18,7 @@ public class PickupService {
     private static final int MIN_ITEM_LENGTH = 2;
     private static final int MAX_ITEM_LENGTH = 100;
     private static final int MAX_NOTES_LENGTH = 255;
+    private static final ZoneId TIME_ZONE = ZoneId.of("America/Vancouver");
 
     private final PickupRequestRepository pickupRepository;
 
@@ -114,6 +117,33 @@ public class PickupService {
         }
 
         pickup.setStatus(next);
+
+        return pickupRepository.save(pickup);
+    }
+
+    // Staff set an estimated ready time on a pickup
+    public PickupRequest setReadyTime(Long pickupId, LocalDateTime readyBy) {
+
+        if (pickupId == null || pickupId <= 0) {
+            throw new IllegalArgumentException("Invalid pickup ID.");
+        }
+
+        if (readyBy == null) {
+            throw new IllegalArgumentException("Ready time is required.");
+        }
+
+        if (!readyBy.isAfter(LocalDateTime.now(TIME_ZONE))) {
+            throw new IllegalArgumentException("Ready time must be in the future.");
+        }
+
+        PickupRequest pickup = pickupRepository.findById(pickupId)
+                .orElseThrow(() -> new IllegalArgumentException("Pickup request not found."));
+
+        if ("PICKED_UP".equals(pickup.getStatus())) {
+            throw new IllegalStateException("This pickup has already been picked up.");
+        }
+
+        pickup.setReadyBy(readyBy);
 
         return pickupRepository.save(pickup);
     }
