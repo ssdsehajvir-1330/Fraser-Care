@@ -4,12 +4,15 @@ import com.cmpt276.frasercare.model.WaitlistEntry;
 import com.cmpt276.frasercare.service.WaitlistService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +84,42 @@ public class WaitlistController {
             "headerName", token.getHeaderName(),
             "token", token.getToken()
         ));
+    }
+
+    // Count customers waiting for appointment slot
+    @GetMapping("/count")
+    public ResponseEntity<?> getWaitingCount(
+            @RequestParam Long serviceId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate appointmentDate,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+            LocalTime startTime,
+            Authentication authentication) {
+
+        if (!isCustomer(authentication)) {
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Customer login required.");
+        }
+
+        try {
+            long waitingCount = waitlistService.getWaitingCount(
+                serviceId,
+                appointmentDate,
+                startTime
+            );
+
+            return ResponseEntity.ok(Map.of(
+                "waitingCount", waitingCount
+            ));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                .badRequest()
+                .body(e.getMessage());
+        }
     }
 
     // Customer joins a waitlist

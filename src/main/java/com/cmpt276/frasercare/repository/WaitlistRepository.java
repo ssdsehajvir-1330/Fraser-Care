@@ -26,6 +26,14 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
         LocalDate appointmentDate
     );
 
+    //Count customers currently waiting for a specific appointment slot
+    long countByServiceIdAndAppointmentDateAndStartTimeAndStatus(
+        Long serviceId,
+        LocalDate appointmentDate,
+        LocalTime startTime,
+        String status
+    );
+
     // Lock all entries for this appointment queue while selecting the next customer to notify
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

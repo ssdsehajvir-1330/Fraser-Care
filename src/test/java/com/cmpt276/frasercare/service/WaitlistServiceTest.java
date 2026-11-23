@@ -1,4 +1,3 @@
-
 package com.cmpt276.frasercare.service;
 
 import com.cmpt276.frasercare.model.WaitlistEntry;
@@ -142,6 +141,77 @@ class WaitlistServiceTest {
         // Verify that duplicate registration does not save another entry
         Mockito.verify(waitlistRepository, Mockito.never())
             .save(Mockito.any(WaitlistEntry.class));
+    }
+
+    // Test 7: Correctly return number of waiting customers
+    @Test
+    void getWaitingCount_threeWaitingCustomers_returnsThree() {
+        Long serviceId = 1L;
+        LocalDate date = LocalDate.of(2026, 12, 1);
+        LocalTime startTime = LocalTime.of(14, 0);
+
+        Mockito.when(
+            waitlistRepository
+                .countByServiceIdAndAppointmentDateAndStartTimeAndStatus(
+                    serviceId, date, startTime, "WAITING"
+                )
+        ).thenReturn(3L);
+
+        long count = waitlistService.getWaitingCount(
+            serviceId, date, startTime
+        );
+
+        assertEquals(3L, count);
+
+        Mockito.verify(waitlistRepository)
+            .countByServiceIdAndAppointmentDateAndStartTimeAndStatus(
+                serviceId, date, startTime, "WAITING"
+            );
+    }
+
+    // Test 8: Return zero when nobody is waiting
+    @Test
+    void getWaitingCount_emptyWaitlist_returnsZero() {
+        Long serviceId = 1L;
+        LocalDate date = LocalDate.of(2026, 12, 1);
+        LocalTime startTime = LocalTime.of(14, 0);
+
+        Mockito.when(
+            waitlistRepository
+                .countByServiceIdAndAppointmentDateAndStartTimeAndStatus(
+                    serviceId, date, startTime, "WAITING"
+                )
+        ).thenReturn(0L);
+
+        long count = waitlistService.getWaitingCount(
+            serviceId, date, startTime
+        );
+
+        assertEquals(0L, count);
+    }
+
+    // Test 9: Reject incomplete appointment information
+    @Test
+    void getWaitingCount_missingInformation_throwsException() {
+        LocalDate date = LocalDate.of(2026, 12, 1);
+        LocalTime startTime = LocalTime.of(14, 0);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> waitlistService.getWaitingCount(
+                null, date, startTime
+            ));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> waitlistService.getWaitingCount(
+                1L, null, startTime
+            ));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> waitlistService.getWaitingCount(
+                1L, date, null
+            ));
+
+        Mockito.verifyNoInteractions(waitlistRepository);
     }
 
     // Helper to create valid test data

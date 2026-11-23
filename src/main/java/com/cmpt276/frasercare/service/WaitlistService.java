@@ -35,6 +35,30 @@ public class WaitlistService {
             );
     }
 
+    //Count customers currently waiting for appointment slot
+    public long getWaitingCount(
+            Long serviceId,
+            LocalDate appointmentDate,
+            LocalTime startTime) {
+
+        if (serviceId == null ||
+            appointmentDate == null ||
+            startTime == null) {
+
+            throw new IllegalArgumentException(
+                "Service, date, and start time are required."
+            );
+        }
+
+        return waitlistRepository
+            .countByServiceIdAndAppointmentDateAndStartTimeAndStatus(
+                serviceId,
+                appointmentDate,
+                startTime,
+                "WAITING"
+            );
+    }
+
     // Retrieve a customer's waitlists and calculate queue positions
     public List<WaitlistEntry> getCustomerWaitlists(Long customerId) {
 
