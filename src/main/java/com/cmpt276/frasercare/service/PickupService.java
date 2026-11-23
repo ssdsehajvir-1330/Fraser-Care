@@ -5,6 +5,7 @@ import com.cmpt276.frasercare.repository.PickupRequestRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -19,6 +20,8 @@ public class PickupService {
     private static final int MAX_ITEM_LENGTH = 100;
     private static final int MAX_NOTES_LENGTH = 255;
     private static final ZoneId TIME_ZONE = ZoneId.of("America/Vancouver");
+    private static final LocalTime OPENING_TIME = LocalTime.of(9, 0);
+    private static final LocalTime CLOSING_TIME = LocalTime.of(17, 0);
 
     private final PickupRequestRepository pickupRepository;
 
@@ -134,6 +137,13 @@ public class PickupService {
 
         if (!readyBy.isAfter(LocalDateTime.now(TIME_ZONE))) {
             throw new IllegalArgumentException("Ready time must be in the future.");
+        }
+
+        LocalTime time = readyBy.toLocalTime();
+
+        if (time.isBefore(OPENING_TIME) || time.isAfter(CLOSING_TIME)) {
+            throw new IllegalArgumentException(
+                    "Ready time must be during pharmacy hours (9:00 AM to 5:00 PM).");
         }
 
         PickupRequest pickup = pickupRepository.findById(pickupId)

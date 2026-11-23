@@ -37,6 +37,12 @@ class PickupServiceTest {
         return pickup;
     }
 
+    // Tomorrow at a set hour, so tests don't depend on the current time
+    private LocalDateTime tomorrowAt(int hour) {
+        return LocalDateTime.now().plusDays(1).withHour(hour).withMinute(0)
+                .withSecond(0).withNano(0);
+    }
+
     // New request starts as RECEIVED and the item name is trimmed
     @Test
     void createRequest_validDetails_savedAsReceived() {
@@ -142,7 +148,7 @@ class PickupServiceTest {
         Mockito.when(pickupRepository.findById(1L))
                 .thenReturn(Optional.of(pickupWithStatus("RECEIVED")));
 
-        LocalDateTime readyBy = LocalDateTime.now().plusDays(1);
+        LocalDateTime readyBy = tomorrowAt(10);
         PickupRequest result = pickupService.setReadyTime(1L, readyBy);
 
         assertEquals(readyBy, result.getReadyBy());
@@ -172,9 +178,32 @@ class PickupServiceTest {
         Mockito.when(pickupRepository.findById(1L))
                 .thenReturn(Optional.of(pickupWithStatus("PICKED_UP")));
 
-        LocalDateTime readyBy = LocalDateTime.now().plusDays(1);
+        LocalDateTime readyBy = tomorrowAt(10);
 
         assertThrows(IllegalStateException.class,
                 () -> pickupService.setReadyTime(1L, readyBy));
     }
-}
+
+    // A time after closing is rejected
+    @Test
+    void setReadyTime_afterHours_throwsException() {
+        LocalDateTime readyBy = tomorrowAt(20);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> pickupService.setReadyTime(1L, readyBy));
+
+        Mockito.verify(pickupRepository, Mockito.never()).save(any());
+    }
+
+    // Closing time itself is still allowed
+    @Test
+    void setReadyTime_atClosingTime_saves() {
+        Mockito.when(pickupRepository.findById(1L))
+                .thenReturn(Optional.of(pickupWithStatus("RECEIVED")));
+
+        LocalDateTime readyBy = tomorrowAt(17);
+        PickupRequest result = pickupService.setReadyTime(1L, readyBy);
+
+        assertEquals(readyBy, result.getReadyBy());
+    }
+} 
