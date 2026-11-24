@@ -303,3 +303,47 @@ td {
     color: #94a3a8;
     border-color: #94a3a8;
 }
+
+/* Today's summary cards */
+.daily-summary {
+    margin-bottom: 30px;
+}
+
+.daily-summary h2 {
+    font-size: 20px;
+    margin-bottom: 14px;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.summary-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #e1e8e4;
+}
+
+.summary-card h3 {
+    color: #69766f;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.summary-card p {
+    font-size: 30px;
+    font-weight: bold;
+    color: #176b55;
+}
+
+.summary-error {
+    background: #fdeaea;
+    color: #b42318;
+    padding: 12px 15px;
+    border-radius: 7px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}

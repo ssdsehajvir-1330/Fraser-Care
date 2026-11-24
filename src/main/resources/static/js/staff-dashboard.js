@@ -116,9 +116,9 @@ async function displayAppointments() {
             (a, b) => a.startTime.localeCompare(b.startTime)
         );
 
-        // Update the appointment count
+        // Update the appointment count (cancelled ones don't count)
         document.getElementById("appointment-count").textContent =
-            sortedAppointments.length;
+            sortedAppointments.filter(a => a.status === "BOOKED").length;
 
         // Show a message if there are no appointments
         if (sortedAppointments.length === 0) {
