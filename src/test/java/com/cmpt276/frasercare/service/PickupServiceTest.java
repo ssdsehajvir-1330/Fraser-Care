@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +35,12 @@ class PickupServiceTest {
         pickup.setItemName("Refill: Amoxicillin");
         pickup.setStatus(status);
         return pickup;
+    }
+
+    // Tomorrow at a set hour, so tests don't depend on the current time
+    private LocalDateTime tomorrowAt(int hour) {
+        return LocalDateTime.now().plusDays(1).withHour(hour).withMinute(0)
+                .withSecond(0).withNano(0);
     }
 
     // New request starts as RECEIVED and the item name is trimmed
@@ -134,4 +141,69 @@ class PickupServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> pickupService.getAllPickups("LOST"));
     }
-}
+
+    // Staff can set a ready time in the future
+    @Test
+    void setReadyTime_futureTime_saves() {
+        Mockito.when(pickupRepository.findById(1L))
+                .thenReturn(Optional.of(pickupWithStatus("RECEIVED")));
+
+        LocalDateTime readyBy = tomorrowAt(10);
+        PickupRequest result = pickupService.setReadyTime(1L, readyBy);
+
+        assertEquals(readyBy, result.getReadyBy());
+    }
+
+    // A time in the past is rejected and nothing is saved
+    @Test
+    void setReadyTime_pastTime_throwsException() {
+        LocalDateTime readyBy = LocalDateTime.now().minusDays(1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> pickupService.setReadyTime(1L, readyBy));
+
+        Mockito.verify(pickupRepository, Mockito.never()).save(any());
+    }
+
+    // Missing time is rejected
+    @Test
+    void setReadyTime_nullTime_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> pickupService.setReadyTime(1L, null));
+    }
+
+    // Can't set a ready time once it's been picked up
+    @Test
+    void setReadyTime_alreadyPickedUp_throwsException() {
+        Mockito.when(pickupRepository.findById(1L))
+                .thenReturn(Optional.of(pickupWithStatus("PICKED_UP")));
+
+        LocalDateTime readyBy = tomorrowAt(10);
+
+        assertThrows(IllegalStateException.class,
+                () -> pickupService.setReadyTime(1L, readyBy));
+    }
+
+    // A time after closing is rejected
+    @Test
+    void setReadyTime_afterHours_throwsException() {
+        LocalDateTime readyBy = tomorrowAt(20);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> pickupService.setReadyTime(1L, readyBy));
+
+        Mockito.verify(pickupRepository, Mockito.never()).save(any());
+    }
+
+    // Closing time itself is still allowed
+    @Test
+    void setReadyTime_atClosingTime_saves() {
+        Mockito.when(pickupRepository.findById(1L))
+                .thenReturn(Optional.of(pickupWithStatus("RECEIVED")));
+
+        LocalDateTime readyBy = tomorrowAt(17);
+        PickupRequest result = pickupService.setReadyTime(1L, readyBy);
+
+        assertEquals(readyBy, result.getReadyBy());
+    }
+} 

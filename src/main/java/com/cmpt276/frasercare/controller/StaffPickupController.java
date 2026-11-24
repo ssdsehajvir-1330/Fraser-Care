@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,6 +29,9 @@ public class StaffPickupController {
     }
 
     public record StatusUpdate(String status) {
+    }
+    
+    public record ReadyTimeUpdate(LocalDateTime readyBy) {
     }
 
     // All pickups, optionally filtered by status
@@ -63,6 +67,30 @@ public class StaffPickupController {
         try {
             PickupRequest pickup = pickupService.updateStatus(
                     pickupId, update == null ? null : update.status());
+
+            String name = customerNameService
+                    .getNames(Set.of(pickup.getCustomerId()))
+                    .get(pickup.getCustomerId());
+
+            return ResponseEntity.ok(PickupResponse.from(pickup, name));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    // Set the estimated ready time on a pickup
+    @PatchMapping("/{pickupId}/ready-time")
+    public ResponseEntity<?> setReadyTime(
+            @PathVariable Long pickupId,
+            @RequestBody ReadyTimeUpdate update) {
+
+        try {
+            PickupRequest pickup = pickupService.setReadyTime(
+                    pickupId, update == null ? null : update.readyBy());
 
             String name = customerNameService
                     .getNames(Set.of(pickup.getCustomerId()))
