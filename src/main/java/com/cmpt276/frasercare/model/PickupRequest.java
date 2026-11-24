@@ -28,6 +28,9 @@ public class PickupRequest {
     @Column(nullable = false)
     private String status = "RECEIVED";
 
+    @Column(name = "ready_by")
+    private LocalDateTime readyBy;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -89,10 +92,18 @@ public class PickupRequest {
         this.status = status;
     }
 
+    public LocalDateTime getReadyBy() {
+        return readyBy;
+    }
+
+    public void setReadyBy(LocalDateTime readyBy) {
+        this.readyBy = readyBy;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
+    
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }

@@ -73,13 +73,16 @@ async function loadPickups() {
             const updatedCell = document.createElement("td");
             updatedCell.textContent = formatDateTime(pickup.updatedAt);
 
+            const readyCell = document.createElement("td");
+            readyCell.textContent = formatDateTime(pickup.readyBy);
+
             const statusCell = document.createElement("td");
             const badge = document.createElement("span");
             badge.className = "pickup-status " + pickup.status.toLowerCase();
             badge.textContent = STATUS_LABELS[pickup.status] || pickup.status;
             statusCell.appendChild(badge);
 
-            row.append(itemCell, notesCell, createdCell, updatedCell, statusCell);
+            row.append(itemCell, notesCell, createdCell, updatedCell, readyCell, statusCell);
             pickupRows.appendChild(row);
         });
 

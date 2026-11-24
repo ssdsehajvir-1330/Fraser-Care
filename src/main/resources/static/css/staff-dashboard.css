@@ -273,3 +273,33 @@ td {
         padding: 15px;
     }
 }
+
+.ready-time-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.ready-time-input {
+    padding: 6px 8px;
+    border: 1px solid #cfd8d4;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.pickup-action.secondary {
+    background: white;
+    color: #176b55;
+    border: 1px solid #176b55;
+}
+
+.pickup-action.secondary:hover {
+    background: #e8f3ed;
+}
+
+.pickup-action.secondary:disabled {
+    background: white;
+    color: #94a3a8;
+    border-color: #94a3a8;
+}

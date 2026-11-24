@@ -57,6 +57,9 @@ function buildPickupRow(pickup) {
     badge.textContent = PICKUP_LABELS[pickup.status] || pickup.status;
     statusCell.appendChild(badge);
 
+    const readyCell = document.createElement("td");
+    readyCell.textContent = formatPickupDate(pickup.readyBy);
+
     const actionCell = document.createElement("td");
     const next = NEXT_STEP[pickup.status];
 
@@ -70,12 +73,13 @@ function buildPickupRow(pickup) {
             updatePickupStatus(pickup.pickupId, next.status, button);
         });
 
-        actionCell.appendChild(button);
+        actionCell.append(button, buildReadyTimeForm(pickup));
     } else {
         actionCell.textContent = "Done";
     }
 
-    row.append(customerCell, itemCell, notesCell, createdCell, statusCell, actionCell);
+    row.append(customerCell, itemCell, notesCell, createdCell,
+        statusCell, readyCell, actionCell);
     return row;
 }
 
@@ -154,6 +158,83 @@ async function updatePickupStatus(pickupId, newStatus, button) {
         }
 
         showPickupMessage(`Pickup marked as ${PICKUP_LABELS[newStatus]}.`, false);
+        await loadStaffPickups();
+
+    } catch (error) {
+        showPickupMessage(error.message, true);
+        button.disabled = false;
+    }
+}
+
+// Current local time in the format a datetime-local input uses
+function currentLocalTime() {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+}
+
+// Time picker and button for setting the ready time
+function buildReadyTimeForm(pickup) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "ready-time-form";
+
+    const input = document.createElement("input");
+    input.type = "datetime-local";
+    input.className = "ready-time-input";
+    input.min = currentLocalTime();
+    input.setAttribute("aria-label", "Ready by time for " + pickup.itemName);
+
+    if (pickup.readyBy) {
+        input.value = pickup.readyBy.slice(0, 16);
+    }
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "pickup-action secondary";
+    button.textContent = pickup.readyBy ? "Change Time" : "Set Time";
+
+    button.addEventListener("click", () => {
+        setPickupReadyTime(pickup.pickupId, input, button);
+    });
+
+    wrapper.append(input, button);
+    return wrapper;
+}
+
+// Save the ready time for a pickup
+async function setPickupReadyTime(pickupId, input, button) {
+    if (!input.value) {
+        showPickupMessage("Please pick a ready time first.", true);
+        return;
+    }
+
+    button.disabled = true;
+
+    try {
+        const csrfResponse = await fetch("/csrf", { credentials: "same-origin" });
+
+        if (!csrfResponse.ok) {
+            throw new Error("Could not update right now. Please refresh the page.");
+        }
+
+        const csrf = await csrfResponse.json();
+
+        const response = await fetch(`/api/staff/pickups/${pickupId}/ready-time`, {
+            method: "PATCH",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                [csrf.headerName]: csrf.token
+            },
+            body: JSON.stringify({ readyBy: input.value })
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(message || "Could not save the ready time.");
+        }
+
+        showPickupMessage("Ready time saved.", false);
         await loadStaffPickups();
 
     } catch (error) {
