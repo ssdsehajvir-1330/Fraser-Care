@@ -12,6 +12,7 @@ public record PickupResponse(
         String itemName,
         String notes,
         String status,
+        LocalDateTime readyBy,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
 
@@ -23,6 +24,7 @@ public record PickupResponse(
                 pickup.getItemName(),
                 pickup.getNotes(),
                 pickup.getStatus(),
+                pickup.getReadyBy(),
                 pickup.getCreatedAt(),
                 pickup.getUpdatedAt());
     }

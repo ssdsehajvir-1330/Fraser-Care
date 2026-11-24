@@ -85,3 +85,8 @@ CREATE TABLE IF NOT EXISTS pickup_requests (
 
     CHECK (status IN ('RECEIVED', 'READY', 'PICKED_UP'))
 );
+
+-- Estimated ready time set by staff
+
+ALTER TABLE pickup_requests
+    ADD COLUMN IF NOT EXISTS ready_by TIMESTAMP;
