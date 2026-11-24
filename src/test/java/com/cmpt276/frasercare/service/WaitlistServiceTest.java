@@ -1,5 +1,6 @@
 package com.cmpt276.frasercare.service;
 
+import com.cmpt276.frasercare.model.Appointment;
 import com.cmpt276.frasercare.model.WaitlistEntry;
 import com.cmpt276.frasercare.repository.WaitlistRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +68,6 @@ class WaitlistServiceTest {
     void joinWaitlist_availableSlot_throwsException() {
         WaitlistEntry entry = createValidEntry();
 
-        // False means the slot is not occupied by a booking
         Mockito.when(appointmentBookingService.isWaitlistEligibleSlot(
             entry.getServiceId(),
             entry.getAppointmentDate(),
@@ -84,13 +84,7 @@ class WaitlistServiceTest {
     void joinWaitlist_fullyBookedSlot_savesEntry() {
         WaitlistEntry entry = createValidEntry();
 
-        // True means the slot is valid and occupied
-        Mockito.when(appointmentBookingService.isWaitlistEligibleSlot(
-            entry.getServiceId(),
-            entry.getAppointmentDate(),
-            entry.getStartTime(),
-            entry.getEndTime()
-        )).thenReturn(true);
+        stubEligibleSlot(entry);
 
         Mockito.when(waitlistRepository.save(entry))
             .thenReturn(entry);
@@ -108,16 +102,10 @@ class WaitlistServiceTest {
     void joinWaitlist_duplicateRegistration_throwsException() {
         WaitlistEntry entry = createValidEntry();
 
-        // Existing WAITING entry for the same customer and slot
         WaitlistEntry existingEntry = createValidEntry();
         existingEntry.setStatus("WAITING");
 
-        Mockito.when(appointmentBookingService.isWaitlistEligibleSlot(
-            entry.getServiceId(),
-            entry.getAppointmentDate(),
-            entry.getStartTime(),
-            entry.getEndTime()
-        )).thenReturn(true);
+        stubEligibleSlot(entry);
 
         Mockito.when(
             waitlistRepository
@@ -138,12 +126,13 @@ class WaitlistServiceTest {
             exception.getMessage()
         );
 
-        // Verify that duplicate registration does not save another entry
         Mockito.verify(waitlistRepository, Mockito.never())
             .save(Mockito.any(WaitlistEntry.class));
     }
 
-    // Test 7: Correctly return number of waiting customers
+    // WAIT-7: Waiting count tests
+
+    // Test 7: Return the number of waiting customers
     @Test
     void getWaitingCount_threeWaitingCustomers_returnsThree() {
         Long serviceId = 1L;
@@ -214,7 +203,167 @@ class WaitlistServiceTest {
         Mockito.verifyNoInteractions(waitlistRepository);
     }
 
-    // Helper to create valid test data
+    // Test 10: Reject exact appointment overlap
+    @Test
+    void joinWaitlist_sameAppointmentTime_throwsException() {
+        WaitlistEntry entry = createValidEntry();
+
+        Appointment appointment = createAppointment(
+            entry,
+            entry.getAppointmentDate(),
+            LocalTime.of(14, 0),
+            LocalTime.of(14, 15),
+            "BOOKED"
+        );
+
+        stubEligibleSlot(entry);
+
+        Mockito.when(
+            appointmentBookingService.getAppointmentsByCustomerId(
+                entry.getCustomerId()
+            )
+        ).thenReturn(List.of(appointment));
+
+        IllegalStateException exception = assertThrows(
+            IllegalStateException.class,
+            () -> waitlistService.joinWaitlist(entry)
+        );
+
+        assertEquals(
+            "You already have a booked appointment that overlaps this waitlist slot.",
+            exception.getMessage()
+        );
+
+        Mockito.verify(waitlistRepository, Mockito.never())
+            .save(Mockito.any(WaitlistEntry.class));
+    }
+
+    // Test 11: Reject partially overlapping appointment
+    @Test
+    void joinWaitlist_partialOverlap_throwsException() {
+        WaitlistEntry entry = createValidEntry();
+
+        Appointment appointment = createAppointment(
+            entry,
+            entry.getAppointmentDate(),
+            LocalTime.of(13, 45),
+            LocalTime.of(14, 5),
+            "BOOKED"
+        );
+
+        stubEligibleSlot(entry);
+
+        Mockito.when(
+            appointmentBookingService.getAppointmentsByCustomerId(
+                entry.getCustomerId()
+            )
+        ).thenReturn(List.of(appointment));
+
+        assertThrows(IllegalStateException.class,
+            () -> waitlistService.joinWaitlist(entry));
+
+        Mockito.verify(waitlistRepository, Mockito.never())
+            .save(Mockito.any(WaitlistEntry.class));
+    }
+
+    // Test 12: Allow appointments that do not overlap
+    @Test
+    void joinWaitlist_backToBackAppointments_savesEntry() {
+        WaitlistEntry entry = createValidEntry();
+
+        // Existing appointment ends exactly when the waitlist slot begins
+        Appointment appointment = createAppointment(
+            entry,
+            entry.getAppointmentDate(),
+            LocalTime.of(13, 45),
+            LocalTime.of(14, 0),
+            "BOOKED"
+        );
+
+        stubEligibleSlot(entry);
+
+        Mockito.when(
+            appointmentBookingService.getAppointmentsByCustomerId(
+                entry.getCustomerId()
+            )
+        ).thenReturn(List.of(appointment));
+
+        Mockito.when(waitlistRepository.save(entry))
+            .thenReturn(entry);
+
+        WaitlistEntry result = waitlistService.joinWaitlist(entry);
+
+        assertNotNull(result);
+        assertEquals("WAITING", result.getStatus());
+
+        Mockito.verify(waitlistRepository).save(entry);
+    }
+
+    // Test 13: Ignore cancelled appointments
+    @Test
+    void joinWaitlist_cancelledAppointment_savesEntry() {
+        WaitlistEntry entry = createValidEntry();
+
+        Appointment appointment = createAppointment(
+            entry,
+            entry.getAppointmentDate(),
+            LocalTime.of(14, 0),
+            LocalTime.of(14, 15),
+            "CANCELLED"
+        );
+
+        stubEligibleSlot(entry);
+
+        Mockito.when(
+            appointmentBookingService.getAppointmentsByCustomerId(
+                entry.getCustomerId()
+            )
+        ).thenReturn(List.of(appointment));
+
+        Mockito.when(waitlistRepository.save(entry))
+            .thenReturn(entry);
+
+        WaitlistEntry result = waitlistService.joinWaitlist(entry);
+
+        assertNotNull(result);
+        assertEquals("WAITING", result.getStatus());
+
+        Mockito.verify(waitlistRepository).save(entry);
+    }
+
+    // Test 14: Allow appointments on different dates
+    @Test
+    void joinWaitlist_differentDate_savesEntry() {
+        WaitlistEntry entry = createValidEntry();
+
+        Appointment appointment = createAppointment(
+            entry,
+            entry.getAppointmentDate().plusDays(1),
+            LocalTime.of(14, 0),
+            LocalTime.of(14, 15),
+            "BOOKED"
+        );
+
+        stubEligibleSlot(entry);
+
+        Mockito.when(
+            appointmentBookingService.getAppointmentsByCustomerId(
+                entry.getCustomerId()
+            )
+        ).thenReturn(List.of(appointment));
+
+        Mockito.when(waitlistRepository.save(entry))
+            .thenReturn(entry);
+
+        WaitlistEntry result = waitlistService.joinWaitlist(entry);
+
+        assertNotNull(result);
+        assertEquals("WAITING", result.getStatus());
+
+        Mockito.verify(waitlistRepository).save(entry);
+    }
+
+    // Helper: Create a valid waitlist entry
     private WaitlistEntry createValidEntry() {
         WaitlistEntry entry = new WaitlistEntry();
 
@@ -227,5 +376,37 @@ class WaitlistServiceTest {
         entry.setEndTime(LocalTime.of(14, 15));
 
         return entry;
+    }
+
+    // Helper: Create existing customer appointment
+    private Appointment createAppointment(
+            WaitlistEntry entry,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            String status) {
+
+        Appointment appointment = new Appointment();
+
+        appointment.setCustomerId(entry.getCustomerId());
+        appointment.setServiceId(entry.getServiceId());
+        appointment.setAppointmentDate(date);
+        appointment.setStartTime(startTime);
+        appointment.setEndTime(endTime);
+        appointment.setStatus(status);
+
+        return appointment;
+    }
+
+    // Helper: Mark slot as eligible for waitlisting
+    private void stubEligibleSlot(WaitlistEntry entry) {
+        Mockito.when(
+            appointmentBookingService.isWaitlistEligibleSlot(
+                entry.getServiceId(),
+                entry.getAppointmentDate(),
+                entry.getStartTime(),
+                entry.getEndTime()
+            )
+        ).thenReturn(true);
     }
 }

@@ -1,5 +1,6 @@
 package com.cmpt276.frasercare.service;
 
+import com.cmpt276.frasercare.model.Appointment;
 import com.cmpt276.frasercare.model.WaitlistEntry;
 import com.cmpt276.frasercare.repository.WaitlistRepository;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class WaitlistService {
             );
     }
 
-    //Count customers currently waiting for appointment slot
+    // WAIT-7: Count customers currently waiting for an appointment slot
     public long getWaitingCount(
             Long serviceId,
             LocalDate appointmentDate,
@@ -160,6 +161,32 @@ public class WaitlistService {
             throw new IllegalStateException(
                 "This appointment slot is available. Please book it instead."
             );
+        }
+
+        // Reject requests that conflict with customer booked appointments
+        List<Appointment> customerAppointments =
+            appointmentBookingService.getAppointmentsByCustomerId(
+                entry.getCustomerId()
+            );
+
+        for (Appointment appointment : customerAppointments) {
+            boolean booked = "BOOKED".equals(appointment.getStatus());
+
+            boolean sameDate = entry.getAppointmentDate().equals(
+                appointment.getAppointmentDate()
+            );
+
+            boolean overlaps = entry.getStartTime().isBefore(
+                appointment.getEndTime()
+            ) && entry.getEndTime().isAfter(
+                appointment.getStartTime()
+            );
+
+            if (booked && sameDate && overlaps) {
+                throw new IllegalStateException(
+                    "You already have a booked appointment that overlaps this waitlist slot."
+                );
+            }
         }
 
         // Get existing entries for this appointment
