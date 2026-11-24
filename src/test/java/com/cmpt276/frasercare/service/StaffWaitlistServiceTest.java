@@ -108,6 +108,8 @@ class StaffWaitlistServiceTest {
         return entry;
     }
 
+    // Existing tests
+
     @Test
     void notifiesFirstWaitingCustomer() {
 
@@ -222,5 +224,113 @@ class StaffWaitlistServiceTest {
 
         assertNull(entries.get(0).getQueuePosition());
         assertEquals(1, entries.get(1).getQueuePosition());
+    }
+
+    // Test 9: Different service can free requested slot
+    @Test
+    void notifiesWhenDifferentServiceCancellationOverlaps() {
+
+        Appointment cancelled = new Appointment();
+
+        // Waitlist: Service 3, 12:30–12:45
+        // Cancellation: Service 4, 12:15–1:00
+        cancelled.setServiceId(4L);
+        cancelled.setAppointmentDate(date);
+        cancelled.setStartTime(LocalTime.of(12, 15));
+        cancelled.setEndTime(LocalTime.of(13, 0));
+        cancelled.setStatus("CANCELLED");
+
+        when(appointments.findByAppointmentDateAndStatus(
+            date,
+            "CANCELLED"
+        )).thenReturn(List.of(cancelled));
+
+        WaitlistEntry result =
+            service.notifyNextCustomer(1L);
+
+        assertEquals("NOTIFIED", result.getStatus());
+
+        verify(waitlists).save(first);
+    }
+
+    // Test 10: Partially overlapping cancellation recognized
+    @Test
+    void notifiesWhenCancellationPartiallyOverlaps() {
+
+        Appointment cancelled = new Appointment();
+
+        // Waitlist: 12:30–12:45
+        // Cancellation: 12:40–1:00
+        cancelled.setServiceId(4L);
+        cancelled.setAppointmentDate(date);
+        cancelled.setStartTime(LocalTime.of(12, 40));
+        cancelled.setEndTime(LocalTime.of(13, 0));
+        cancelled.setStatus("CANCELLED");
+
+        when(appointments.findByAppointmentDateAndStatus(
+            date,
+            "CANCELLED"
+        )).thenReturn(List.of(cancelled));
+
+        WaitlistEntry result =
+            service.notifyNextCustomer(1L);
+
+        assertEquals("NOTIFIED", result.getStatus());
+
+        verify(waitlists).save(first);
+    }
+
+    // Test 11: Adjacent appointment ending at slot start is not overlap
+    @Test
+    void cannotNotifyWhenCancellationEndsAtSlotStart() {
+
+        Appointment cancelled = new Appointment();
+
+        // Waitlist: 12:30–12:45
+        // Cancellation: 12:00–12:30
+        cancelled.setServiceId(4L);
+        cancelled.setAppointmentDate(date);
+        cancelled.setStartTime(LocalTime.of(12, 0));
+        cancelled.setEndTime(LocalTime.of(12, 30));
+        cancelled.setStatus("CANCELLED");
+
+        when(appointments.findByAppointmentDateAndStatus(
+            date,
+            "CANCELLED"
+        )).thenReturn(List.of(cancelled));
+
+        assertThrows(
+            IllegalStateException.class,
+            () -> service.notifyNextCustomer(1L)
+        );
+
+        verify(waitlists, never()).save(any());
+    }
+
+    // Test 12: Adjacent appointment starting at slot end is not overlap
+    @Test
+    void cannotNotifyWhenCancellationStartsAtSlotEnd() {
+
+        Appointment cancelled = new Appointment();
+
+        // Waitlist: 12:30–12:45
+        // Cancellation: 12:45–1:00
+        cancelled.setServiceId(4L);
+        cancelled.setAppointmentDate(date);
+        cancelled.setStartTime(LocalTime.of(12, 45));
+        cancelled.setEndTime(LocalTime.of(13, 0));
+        cancelled.setStatus("CANCELLED");
+
+        when(appointments.findByAppointmentDateAndStatus(
+            date,
+            "CANCELLED"
+        )).thenReturn(List.of(cancelled));
+
+        assertThrows(
+            IllegalStateException.class,
+            () -> service.notifyNextCustomer(1L)
+        );
+
+        verify(waitlists, never()).save(any());
     }
 }

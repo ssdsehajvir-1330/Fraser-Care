@@ -1,6 +1,5 @@
 package com.cmpt276.frasercare.service;
 
-import com.cmpt276.frasercare.model.Appointment;
 import com.cmpt276.frasercare.model.WaitlistEntry;
 import com.cmpt276.frasercare.repository.AppointmentRepository;
 import com.cmpt276.frasercare.repository.WaitlistRepository;
@@ -152,7 +151,6 @@ public class StaffWaitlistService {
         LocalDate date = next.getAppointmentDate();
         LocalTime startTime = next.getStartTime();
         LocalTime endTime = next.getEndTime();
-        Long serviceId = next.getServiceId();
 
         // Reject appointment times that have already passed
         LocalDateTime now = LocalDateTime.now(
@@ -165,7 +163,8 @@ public class StaffWaitlistService {
             );
         }
 
-        // Verify that a matching appointment was cancelled
+        // Now cancellation may free a waitlist position even if appointment was booked for different service
+        // The two appointment time intervals must overlap
         boolean cancellationExists = appointmentRepository
             .findByAppointmentDateAndStatus(
                 date,
@@ -173,18 +172,8 @@ public class StaffWaitlistService {
             )
             .stream()
             .anyMatch(appointment ->
-                Objects.equals(
-                    appointment.getServiceId(),
-                    serviceId
-                )
-                && Objects.equals(
-                    appointment.getStartTime(),
-                    startTime
-                )
-                && Objects.equals(
-                    appointment.getEndTime(),
-                    endTime
-                )
+                appointment.getStartTime().isBefore(endTime)
+                && appointment.getEndTime().isAfter(startTime)
             );
 
         if (!cancellationExists) {

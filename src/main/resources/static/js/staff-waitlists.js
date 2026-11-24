@@ -65,7 +65,7 @@
         return "Unavailable";
     }
 
-    // Read an error returned by the backend
+    // Read backend errors whether JSON/plain text
     async function getErrorMessage(response, fallback) {
         if (response.redirected || response.status === 401) {
             return "Your session has expired. Please log in again.";
@@ -75,28 +75,43 @@
             return "Staff or administrator access is required.";
         }
 
-        const contentType = response.headers.get("content-type") || "";
+        try {
+            const responseText = (await response.text()).trim();
 
-        if (contentType.includes("text/plain")) {
-            const message = (await response.text()).trim();
-            return message || fallback;
-        }
-
-        if (contentType.includes("application/json")) {
-            try {
-                const data = await response.json();
-
-                if (typeof data === "string") {
-                    return data;
-                }
-
-                return data.message || data.error || fallback;
-            } catch (error) {
+            if (!responseText) {
                 return fallback;
             }
-        }
 
-        return fallback;
+            const contentType = response.headers.get("content-type") || "";
+
+            // Do not display HTML error page as staff message
+            if (contentType.includes("text/html")) {
+                return fallback;
+            }
+
+            try {
+                const data = JSON.parse(responseText);
+
+                if (typeof data === "string") {
+                    return data.trim() || fallback;
+                }
+
+                if (data && typeof data === "object") {
+                    const message = data.message || data.error || data.detail;
+
+                    if (typeof message === "string" && message.trim()) {
+                        return message.trim();
+                    }
+                }
+
+                return fallback;
+            } catch (error) {
+                // The body is plain text even if labelled as JSON
+                return responseText;
+            }
+        } catch (error) {
+            return fallback;
+        }
     }
 
     // Create a table cell containing text
