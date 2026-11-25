@@ -49,6 +49,10 @@ public class StaffWaitlistController {
         List<WaitlistEntry> entries =
             staffWaitlistService.getWaitlistsForDate(date);
 
+        // Determine notification eligibility automatically
+        Map<Long, StaffWaitlistService.NotificationEligibility> eligibility =
+            staffWaitlistService.getNotificationEligibilityForDate(date);
+
         // Retrieve customer names
         Set<Long> customerIds = entries.stream()
             .map(WaitlistEntry::getCustomerId)
@@ -91,6 +95,18 @@ public class StaffWaitlistController {
                 "Service #" + entry.getServiceId()
             );
 
+            // Get customer eligibility result
+            StaffWaitlistService.NotificationEligibility decision =
+                eligibility.get(entry.getWaitlistId());
+
+            boolean readyToNotify =
+                decision != null && decision.ready();
+
+            String notificationReason =
+                decision != null
+                    ? decision.reason()
+                    : "Eligibility unavailable.";
+
             responses.add(new StaffWaitlistResponse(
                 entry.getWaitlistId(),
                 entry.getCustomerId(),
@@ -102,14 +118,16 @@ public class StaffWaitlistController {
                 entry.getEndTime(),
                 entry.getJoinedAt(),
                 entry.getStatus(),
-                entry.getQueuePosition()
+                entry.getQueuePosition(),
+                readyToNotify,
+                notificationReason
             ));
         }
 
         return ResponseEntity.ok(responses);
     }
 
-    // Notify the first customer for an available cancelled slot
+    // Notify the 1st customer for available cancelled slot
     @PostMapping("/{waitlistId}/notify")
     public ResponseEntity<?> notifyNextCustomer(
             @PathVariable Long waitlistId,
@@ -156,7 +174,7 @@ public class StaffWaitlistController {
         }
     }
 
-    // Data returned to the staff dashboard
+    // Data returned to staff dashboard
     public record StaffWaitlistResponse(
         Long waitlistId,
         Long customerId,
@@ -168,7 +186,9 @@ public class StaffWaitlistController {
         LocalTime endTime,
         LocalDateTime joinedAt,
         String status,
-        Integer queuePosition
+        Integer queuePosition,
+        boolean readyToNotify,
+        String notificationReason
     ) {
     }
 }

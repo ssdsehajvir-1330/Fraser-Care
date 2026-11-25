@@ -65,7 +65,7 @@
         return "Unavailable";
     }
 
-    // Read backend errors whether JSON/plain text
+    // Read backend errors whether the response is JSON or plain text
     async function getErrorMessage(response, fallback) {
         if (response.redirected || response.status === 401) {
             return "Your session has expired. Please log in again.";
@@ -84,7 +84,6 @@
 
             const contentType = response.headers.get("content-type") || "";
 
-            // Do not display HTML error page as staff message
             if (contentType.includes("text/html")) {
                 return fallback;
             }
@@ -106,7 +105,6 @@
 
                 return fallback;
             } catch (error) {
-                // The body is plain text even if labelled as JSON
                 return responseText;
             }
         } catch (error) {
@@ -161,14 +159,49 @@
             formatQueuePosition(entry)
         );
 
-        // Action button
-        const actionCell = document.createElement("td");
-
+        // Show the backend eligibility result to staff
         const isFirstWaiting =
             status === "WAITING" &&
             entry.queuePosition === 1;
 
+        const readyToNotify =
+            isFirstWaiting && entry.readyToNotify === true;
+
         if (isFirstWaiting) {
+            const eligibilityBadge = document.createElement("span");
+
+            eligibilityBadge.className =
+                "staff-waitlist-status " +
+                (readyToNotify
+                    ? "staff-waitlist-status-notified"
+                    : "staff-waitlist-status-cancelled");
+
+            eligibilityBadge.textContent =
+                readyToNotify ? "Ready to Notify" : "Not Ready";
+
+            statusCell.append(
+                document.createElement("br"),
+                eligibilityBadge
+            );
+
+            if (!readyToNotify) {
+                const reason = document.createElement("small");
+
+                reason.textContent =
+                    entry.notificationReason ||
+                    "Eligibility is unavailable.";
+
+                statusCell.append(
+                    document.createElement("br"),
+                    reason
+                );
+            }
+        }
+
+        // Staff can approve only when backend marks entry ready
+        const actionCell = document.createElement("td");
+
+        if (readyToNotify) {
             const notifyButton = document.createElement("button");
 
             notifyButton.type = "button";
@@ -185,6 +218,9 @@
 
         } else if (status === "NOTIFIED") {
             actionCell.textContent = "Already notified";
+
+        } else if (isFirstWaiting) {
+            actionCell.textContent = "Not ready";
 
         } else if (status === "WAITING") {
             actionCell.textContent = "Waiting turn";

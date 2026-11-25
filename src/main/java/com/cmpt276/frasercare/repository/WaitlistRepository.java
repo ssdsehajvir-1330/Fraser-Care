@@ -26,7 +26,7 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
         LocalDate appointmentDate
     );
 
-    //Count customers currently waiting for a specific appointment slot
+    // Count customers currently waiting for a specific appointment slot
     long countByServiceIdAndAppointmentDateAndStartTimeAndStatus(
         Long serviceId,
         LocalDate appointmentDate,
@@ -34,7 +34,7 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
         String status
     );
 
-    // Lock all entries for this appointment queue while selecting the next customer to notify
+    // Lock individual queue during notification
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
         SELECT w FROM WaitlistEntry w
@@ -47,5 +47,16 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
         @Param("serviceId") Long serviceId,
         @Param("appointmentDate") LocalDate appointmentDate,
         @Param("startTime") LocalTime startTime
+    );
+
+    // Lock waitlist entries across all services for date so overlapping notification approvals can be coordinated
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT w FROM WaitlistEntry w
+        WHERE w.appointmentDate = :appointmentDate
+        ORDER BY w.waitlistId ASC
+        """)
+    List<WaitlistEntry> findAllForDateForUpdate(
+        @Param("appointmentDate") LocalDate appointmentDate
     );
 }
