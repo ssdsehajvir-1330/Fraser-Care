@@ -5,6 +5,7 @@ import com.cmpt276.frasercare.model.ActiveIngredient;
 import com.cmpt276.frasercare.model.DrugProductDetails;
 import com.cmpt276.frasercare.model.DrugProductSummary;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClientException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.LongStream;
@@ -24,9 +25,9 @@ class DrugSearchServiceTest {
 
     @Test
     void brandSearchMapsToSummary() {
-        when(client.searchByBrandName("advil")).thenReturn(List.of(product(1)));
+        when(client.searchMarketedByBrandName("advil")).thenReturn(List.of(product(1)));
 
-        DrugProductSummary summary = service.searchByBrandName("  advil ").get(0);
+        DrugProductSummary summary = service.searchByBrandName("  advil ", false).get(0);
 
         assertEquals("PRODUCT 1", summary.brandName());
         assertEquals("TEST PHARMA", summary.company());
@@ -34,10 +35,43 @@ class DrugSearchServiceTest {
     }
 
     @Test
+    void defaultSearchOnlyShowsMarketedProducts() {
+        when(client.searchMarketedByBrandName("advil")).thenReturn(List.of(product(1), product(2)));
+
+        List<DrugProductSummary> results = service.searchByBrandName("advil", false);
+
+        assertEquals(List.of("Marketed", "Marketed"), results.stream().map(DrugProductSummary::status).toList());
+        verify(client, never()).searchByBrandName(any());
+        verify(client, never()).getStatus(anyLong());
+    }
+
+    @Test
+    void includingCancelledListsMarketedFirstWithEachStatus() {
+        when(client.searchMarketedByBrandName("advil")).thenReturn(List.of(product(2)));
+        when(client.searchByBrandName("advil")).thenReturn(List.of(product(1), product(2), product(3)));
+        when(client.getStatus(1)).thenReturn(new DpdStatus("Cancelled Post Market", "2020-01-01"));
+        when(client.getStatus(3)).thenReturn(new DpdStatus("Dormant", "2021-01-01"));
+
+        List<DrugProductSummary> results = service.searchByBrandName("advil", true);
+
+        assertEquals(List.of(2L, 1L, 3L), results.stream().map(DrugProductSummary::drugCode).toList());
+        assertEquals(List.of("Marketed", "Cancelled Post Market", "Dormant"),
+                results.stream().map(DrugProductSummary::status).toList());
+        verify(client, never()).getStatus(2);
+    }
+
+    @Test
+    void brandQueryIsLowercasedSoCaseVariantsShareACacheEntry() {
+        service.searchByBrandName("ADVIL", false);
+
+        verify(client).searchMarketedByBrandName("advil");
+    }
+
+    @Test
     void shortOrInvalidBrandIsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> service.searchByBrandName("ad"));
-        assertThrows(IllegalArgumentException.class, () -> service.searchByBrandName("{advil}"));
-        assertThrows(IllegalArgumentException.class, () -> service.searchByBrandName(null));
+        assertThrows(IllegalArgumentException.class, () -> service.searchByBrandName("ad", false));
+        assertThrows(IllegalArgumentException.class, () -> service.searchByBrandName("{advil}", false));
+        assertThrows(IllegalArgumentException.class, () -> service.searchByBrandName(null, true));
         verifyNoInteractions(client);
     }
 
@@ -50,6 +84,14 @@ class DrugSearchServiceTest {
     }
 
     @Test
+    void dinLookupStillShowsCancelledProducts() {
+        when(client.findByDin("00000001")).thenReturn(List.of(product(1)));
+        when(client.getStatus(1)).thenReturn(new DpdStatus("Cancelled Post Market", "2020-01-01"));
+
+        assertEquals("Cancelled Post Market", service.findByDin("1").get(0).status());
+    }
+
+    @Test
     void nonNumericDinIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> service.findByDin("ABC123"));
         assertThrows(IllegalArgumentException.class, () -> service.findByDin("123456789"));
@@ -58,9 +100,26 @@ class DrugSearchServiceTest {
     @Test
     void resultsAreCapped() {
         List<DpdDrugProduct> many = LongStream.range(0, 120).mapToObj(this::product).toList();
-        when(client.searchByBrandName("vitamin")).thenReturn(many);
+        when(client.searchMarketedByBrandName("vitamin")).thenReturn(many);
 
-        assertEquals(DrugSearchService.MAX_RESULTS, service.searchByBrandName("vitamin").size());
+        assertEquals(DrugSearchService.MAX_RESULTS, service.searchByBrandName("vitamin", false).size());
+    }
+
+    @Test
+    void statusLookupsAreCappedToo() {
+        when(client.searchByBrandName("vitamin")).thenReturn(LongStream.range(0, 120).mapToObj(this::product).toList());
+
+        service.searchByBrandName("vitamin", true);
+
+        verify(client, times(DrugSearchService.MAX_RESULTS)).getStatus(anyLong());
+    }
+
+    @Test
+    void healthCanadaErrorDuringStatusLookupIsPassedOn() {
+        when(client.findByDin("00000001")).thenReturn(List.of(product(1)));
+        when(client.getStatus(1)).thenThrow(new RestClientException("down"));
+
+        assertThrows(RestClientException.class, () -> service.findByDin("1"));
     }
 
     @Test

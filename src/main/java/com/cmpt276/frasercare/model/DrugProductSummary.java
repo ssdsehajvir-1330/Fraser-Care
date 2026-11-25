@@ -6,5 +6,6 @@ public record DrugProductSummary(
         String brandName,
         String company,
         String productClass,
-        String lastUpdated) {
+        String lastUpdated,
+        String status) {
 }
