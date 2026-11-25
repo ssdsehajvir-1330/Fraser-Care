@@ -5,11 +5,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class HealthCanadaDrugClient {
 
     static final String BASE_URL = "https://health-products.canada.ca/api/drug";
+    static final int MARKETED_STATUS = 2;
 
     private final RestClient restClient;
 
@@ -23,11 +25,15 @@ public class HealthCanadaDrugClient {
     }
 
     public List<DpdDrugProduct> searchByBrandName(String brandName) {
-        return fetchProducts("brandname", brandName);
+        return fetchProducts("brandname", brandName, null);
+    }
+
+    public List<DpdDrugProduct> searchMarketedByBrandName(String brandName) {
+        return fetchProducts("brandname", brandName, MARKETED_STATUS);
     }
 
     public List<DpdDrugProduct> findByDin(String din) {
-        return fetchProducts("din", din);
+        return fetchProducts("din", din, null);
     }
 
     public List<DpdActiveIngredient> getActiveIngredients(long drugCode) {
@@ -66,10 +72,11 @@ public class HealthCanadaDrugClient {
                 .retrieve();
     }
 
-    private List<DpdDrugProduct> fetchProducts(String param, String value) {
+    private List<DpdDrugProduct> fetchProducts(String param, String value, Integer status) {
         DpdDrugProduct[] products = restClient.get()
                 .uri(uri -> uri.path("/drugproduct/")
                         .queryParam(param, "{value}")
+                        .queryParamIfPresent("status", Optional.ofNullable(status))
                         .queryParam("lang", "en")
                         .queryParam("type", "json")
                         .build(value))

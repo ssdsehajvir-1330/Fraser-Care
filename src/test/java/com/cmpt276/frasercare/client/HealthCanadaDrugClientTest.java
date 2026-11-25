@@ -58,6 +58,15 @@ class HealthCanadaDrugClientTest {
     }
 
     @Test
+    void marketedSearchFiltersByStatus() {
+        server.expect(requestTo(HealthCanadaDrugClient.BASE_URL + "/drugproduct/?brandname=advil&status=2&lang=en&type=json"))
+                .andRespond(withSuccess(ADVIL_JSON, MediaType.APPLICATION_JSON));
+
+        assertEquals(1, client.searchMarketedByBrandName("advil").size());
+        server.verify();
+    }
+
+    @Test
     void dinLookupWithNoMatchReturnsEmptyList() {
         server.expect(queryParam("din", "99999999"))
                 .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
