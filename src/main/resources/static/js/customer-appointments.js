@@ -201,7 +201,11 @@ async function loadCustomerAppointments() {
             badge.classList.add("status-other");
         }
 
-        badge.textContent = status;
+        badge.textContent =
+            status === "COMPLETED" ? "Completed" :
+            status === "NO_SHOW" ? "No-show" :
+            status;
+
         statusCell.appendChild(badge);
 
         const actions = document.createElement("td");
@@ -243,7 +247,7 @@ async function loadCustomerAppointments() {
 
             actions.appendChild(cancelButton);
         } else {
-            actions.textContent = "—";
+            actions.textContent = "\u2014";
         }
 
         row.append(service, date, time, statusCell, actions);
