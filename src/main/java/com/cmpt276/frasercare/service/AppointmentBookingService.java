@@ -156,6 +156,44 @@ public class AppointmentBookingService {
         return appointmentRepository.save(appointment);
     }
 
+    public Appointment updateAppointmentStatus(Long appointmentId, String status) {
+
+        if (appointmentId == null || appointmentId <= 0) {
+            throw new IllegalArgumentException("Invalid appointment ID.");
+        }
+
+        if (!"COMPLETED".equals(status) && !"NO_SHOW".equals(status)) {
+            throw new IllegalArgumentException("Invalid appointment status.");
+        }
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Appointment not found."
+                ));
+
+        if (!"BOOKED".equals(appointment.getStatus())) {
+            throw new IllegalStateException(
+                    "This appointment is not currently booked."
+            );
+        }
+
+        ZoneId timeZone = ZoneId.of("America/Vancouver");
+        LocalDate today = LocalDate.now(timeZone);
+        LocalTime now = LocalTime.now(timeZone);
+
+        if (appointment.getAppointmentDate().isAfter(today) ||
+            (appointment.getAppointmentDate().equals(today) &&
+             appointment.getEndTime().isAfter(now))) {
+            throw new IllegalStateException(
+                    "Only past appointments can be marked as completed or no-show."
+            );
+        }
+
+        appointment.setStatus(status);
+
+        return appointmentRepository.save(appointment);
+    }
+
     public List<LocalTime> getAvailableStartTimes(Long serviceId, LocalDate date) {
 
         if (serviceId == null || serviceId <= 0 || date == null) {
