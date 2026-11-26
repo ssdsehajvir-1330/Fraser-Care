@@ -1,6 +1,7 @@
 package com.cmpt276.frasercare.controller;
 
 import com.cmpt276.frasercare.service.PickupService;
+import com.cmpt276.frasercare.service.PickupSuggestionService;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,15 +9,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 @RestController
 @RequestMapping("/api/pickups")
 public class PickupController {
 
     private final PickupService pickupService;
+    private final PickupSuggestionService suggestionService;
     private final JdbcTemplate jdbc;
 
-    public PickupController(PickupService pickupService, JdbcTemplate jdbc) {
+    public PickupController(
+            PickupService pickupService,
+            PickupSuggestionService suggestionService,
+            JdbcTemplate jdbc) {
         this.pickupService = pickupService;
+        this.suggestionService = suggestionService;
         this.jdbc = jdbc;
     }
 
@@ -62,6 +69,12 @@ public class PickupController {
         }
 
         return ResponseEntity.ok(pickupService.getCustomerPickups(customerId));
+    }
+
+    // Item name suggestions while the customer types
+    @GetMapping("/suggestions")
+    public List<String> suggestions(@RequestParam(required = false) String q) {
+        return suggestionService.suggestItemNames(q);
     }
 
     // Customer ID comes from the login and not the browser
