@@ -118,7 +118,7 @@ async function displayAppointments() {
 
         // Update the appointment count (cancelled ones don't count)
         document.getElementById("appointment-count").textContent =
-            sortedAppointments.filter(a => a.status === "BOOKED").length;
+            sortedAppointments.filter(a => a.status !== "CANCELLED").length;
 
         // Show a message if there are no appointments
         if (sortedAppointments.length === 0) {
