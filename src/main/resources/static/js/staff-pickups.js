@@ -159,6 +159,7 @@ async function updatePickupStatus(pickupId, newStatus, button) {
 
         showPickupMessage(`Pickup marked as ${PICKUP_LABELS[newStatus]}.`, false);
         await loadStaffPickups();
+        loadStaffSummary();
 
     } catch (error) {
         showPickupMessage(error.message, true);

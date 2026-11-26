@@ -11,6 +11,7 @@
     <script src="js/staff-dashboard.js" defer></script>
     <script src="js/staff-pickups.js" defer></script>
     <script src="js/staff-waitlists.js" defer></script>
+    <script src="js/staff-summary.js" defer></script>
 </head>
 
 <body>
@@ -23,6 +24,39 @@
         <section class="welcome">
             <h1>Staff Dashboard</h1>
             <p id="today-date"></p>
+        </section>
+
+        <!-- Today's summary -->
+        <section class="daily-summary">
+
+            <h2>Today at a Glance</h2>
+
+            <p class="summary-error" id="summary-message" hidden></p>
+
+            <div class="summary-cards">
+
+                <div class="summary-card">
+                    <h3>Appointments Left Today</h3>
+                    <p id="summary-appointments">-</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Pickups Waiting</h3>
+                    <p id="summary-received">-</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Ready for Pickup</h3>
+                    <p id="summary-ready">-</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>On Today's Waitlist</h3>
+                    <p id="summary-waitlist">-</p>
+                </div>
+
+            </div>
+
         </section>
 
         <section class="summary">
