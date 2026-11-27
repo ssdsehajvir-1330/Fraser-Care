@@ -61,6 +61,14 @@ class DrugSearchServiceTest {
     }
 
     @Test
+    void oneArgumentSearchHidesCancelledProducts() {
+        when(client.searchMarketedByBrandName("advil")).thenReturn(List.of(product(1)));
+
+        assertEquals("Marketed", service.searchByBrandName("advil").get(0).status());
+        verify(client, never()).searchByBrandName(any());
+    }
+
+    @Test
     void brandQueryIsLowercasedSoCaseVariantsShareACacheEntry() {
         service.searchByBrandName("ADVIL", false);
 

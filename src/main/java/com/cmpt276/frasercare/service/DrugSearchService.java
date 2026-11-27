@@ -29,6 +29,10 @@ public class DrugSearchService {
         this.drugClient = drugClient;
     }
 
+    public List<DrugProductSummary> searchByBrandName(String brandName) {
+        return searchByBrandName(brandName, false);
+    }
+
     public List<DrugProductSummary> searchByBrandName(String brandName, boolean includeCancelled) {
         String query = brandName == null ? "" : brandName.trim();
         if (!BRAND_NAME.matcher(query).matches()) {

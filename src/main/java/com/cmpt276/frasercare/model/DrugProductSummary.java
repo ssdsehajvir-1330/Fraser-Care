@@ -8,4 +8,8 @@ public record DrugProductSummary(
         String productClass,
         String lastUpdated,
         String status) {
+
+    public DrugProductSummary(Long drugCode, String din, String brandName, String company, String productClass, String lastUpdated) {
+        this(drugCode, din, brandName, company, productClass, lastUpdated, null);
+    }
 }
