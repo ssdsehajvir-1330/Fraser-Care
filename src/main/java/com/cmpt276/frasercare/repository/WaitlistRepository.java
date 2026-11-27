@@ -59,4 +59,17 @@ public interface WaitlistRepository extends JpaRepository<WaitlistEntry, Long> {
     List<WaitlistEntry> findAllForDateForUpdate(
         @Param("appointmentDate") LocalDate appointmentDate
     );
+    
+    // Find upcoming dates containing active waitlist entries
+    @Query("""
+        SELECT DISTINCT w.appointmentDate
+        FROM WaitlistEntry w
+        WHERE w.status IN ('WAITING', 'NOTIFIED')
+          AND w.appointmentDate >= :today
+        ORDER BY w.appointmentDate ASC
+        """)
+    List<LocalDate> findActiveWaitlistDates(
+        @Param("today") LocalDate today
+    );
+
 }

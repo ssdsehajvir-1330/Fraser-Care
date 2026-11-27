@@ -35,14 +35,13 @@ public class StaffWaitlistService {
         this.appointmentRepository = appointmentRepository;
     }
 
-    // Result of checking whether an entry can be notified
     public record NotificationEligibility(
         boolean ready,
         String reason
     ) {
     }
 
-    // Retrieve all waitlist entries for a selected date
+    // Retrieve waitlists and calculate FIFO queue positions
     @Transactional(readOnly = true)
     public List<WaitlistEntry> getWaitlistsForDate(
             LocalDate appointmentDate) {
@@ -58,7 +57,6 @@ public class StaffWaitlistService {
                 appointmentDate
             );
 
-        // Track positions separately for each service and time
         Map<Long, Map<LocalTime, Integer>> positions =
             new HashMap<>();
 
@@ -88,7 +86,7 @@ public class StaffWaitlistService {
         return entries;
     }
 
-    // Identify which customers are ready for staff approval
+    // Automatically identify entries eligible for staff approval
     @Transactional(readOnly = true)
     public Map<Long, NotificationEligibility>
             getNotificationEligibilityForDate(LocalDate date) {
@@ -113,7 +111,6 @@ public class StaffWaitlistService {
         return calculateEligibility(entries, cancelled, booked);
     }
 
-    // Determine readiness using current appointment and waitlist data
     private Map<Long, NotificationEligibility> calculateEligibility(
             List<WaitlistEntry> entries,
             List<Appointment> cancelled,
@@ -128,25 +125,22 @@ public class StaffWaitlistService {
 
         for (WaitlistEntry entry : entries) {
 
-            NotificationEligibility eligibility =
+            results.put(
+                entry.getWaitlistId(),
                 checkEligibility(
                     entry,
                     entries,
                     cancelled,
                     booked,
                     now
-                );
-
-            results.put(
-                entry.getWaitlistId(),
-                eligibility
+                )
             );
         }
 
         return results;
     }
 
-    // Shared eligibility rules for recommendations and approvals
+    // Shared rules used for recommendations and staff approval
     private NotificationEligibility checkEligibility(
             WaitlistEntry entry,
             List<WaitlistEntry> allEntries,
@@ -155,14 +149,18 @@ public class StaffWaitlistService {
             LocalDateTime now) {
 
         if ("NOTIFIED".equals(entry.getStatus())) {
-            return blocked("Customer has already been notified.");
+            return blocked(
+                "Customer has already been notified."
+            );
         }
 
         if (!"WAITING".equals(entry.getStatus())) {
-            return blocked("Customer is not currently waiting.");
+            return blocked(
+                "Customer is not currently waiting."
+            );
         }
 
-        // Staff cannot skip earlier waiting customers
+        // Preserve FIFO order in each queue
         for (WaitlistEntry other : allEntries) {
 
             if (Objects.equals(
@@ -191,7 +189,7 @@ public class StaffWaitlistService {
             );
         }
 
-        // Require overlapping cancelled appointment
+        // Cancellation must overlap requested slot
         boolean cancellationExists = cancelled.stream()
             .anyMatch(appointment ->
                 overlaps(
@@ -208,7 +206,7 @@ public class StaffWaitlistService {
             );
         }
 
-        // Recheck the customer own booked appointments
+        // Check for customer's own conflicting booking
         boolean customerConflict = booked.stream()
             .anyMatch(appointment ->
                 Objects.equals(
@@ -229,7 +227,7 @@ public class StaffWaitlistService {
             );
         }
 
-        // No booked appointment may overlap the offered slot
+        // Make sure slot still available
         boolean alreadyBooked = booked.stream()
             .anyMatch(appointment ->
                 overlaps(
@@ -246,7 +244,7 @@ public class StaffWaitlistService {
             );
         }
 
-        // Prevent two active notifications for overlapping slots even when services and queue start times different
+        // Prevent conflicting notifications across services
         boolean overlappingNotification = allEntries.stream()
             .anyMatch(other ->
                 "NOTIFIED".equals(other.getStatus())
@@ -270,7 +268,6 @@ public class StaffWaitlistService {
         );
     }
 
-    // Determine whether two waitlist entries belong to same queue
     private boolean sameQueue(
             WaitlistEntry first,
             WaitlistEntry second) {
@@ -289,7 +286,7 @@ public class StaffWaitlistService {
             );
     }
 
-    // Preserve FIFO ordering
+    // Compare waitlist join times with id being the tiebreaker for entries created at same time
     private boolean isEarlier(
             WaitlistEntry first,
             WaitlistEntry second) {
@@ -306,13 +303,11 @@ public class StaffWaitlistService {
             }
         }
 
-        // Use the entry ID to break ties
         return first.getWaitlistId() != null
             && second.getWaitlistId() != null
             && first.getWaitlistId() < second.getWaitlistId();
     }
 
-    // Time intervals overlap only when they share actual time
     private boolean overlaps(
             LocalTime firstStart,
             LocalTime firstEnd,
@@ -327,7 +322,7 @@ public class StaffWaitlistService {
         return new NotificationEligibility(false, reason);
     }
 
-    // Staff approve a notification after all rules are rechecked
+    // Staff approve notification after rechecking eligibility
     @Transactional
     public WaitlistEntry notifyNextCustomer(Long waitlistId) {
 
@@ -345,11 +340,9 @@ public class StaffWaitlistService {
 
         LocalDate date = requested.getAppointmentDate();
 
-        // Lock all existing entries for date, coordinates approvals across overlapping queues
-        List<WaitlistEntry> entries = waitlistRepository
-            .findAllForDateForUpdate(date);
+        List<WaitlistEntry> entries =
+            waitlistRepository.findAllForDateForUpdate(date);
 
-        // Refresh entries after acquiring locks
         for (WaitlistEntry entry : entries) {
             entityManager.refresh(entry);
         }
@@ -372,7 +365,6 @@ public class StaffWaitlistService {
         List<Appointment> booked = appointmentRepository
             .findByAppointmentDateAndStatus(date, "BOOKED");
 
-        // Use exactly the same checks as the dashboard
         Map<Long, NotificationEligibility> eligibility =
             calculateEligibility(
                 entries,
@@ -391,8 +383,108 @@ public class StaffWaitlistService {
             );
         }
 
-        // Final staff approved status change
         target.setStatus("NOTIFIED");
+
+        return waitlistRepository.save(target);
+    }
+
+    // Staff can skip first waiting or notified customer when they decline or cannot be contacted
+    @Transactional
+    public WaitlistEntry skipWaitlistEntry(
+            Long waitlistId,
+            String reason) {
+
+        if (waitlistId == null || waitlistId <= 0) {
+            throw new IllegalArgumentException(
+                "Waitlist entry not found."
+            );
+        }
+
+        // Require a recognized reason for the staff override
+        if (!"Customer declined".equals(reason)
+                && !"Unable to contact".equals(reason)) {
+
+            throw new IllegalArgumentException(
+                "A valid skip reason is required."
+            );
+        }
+
+        WaitlistEntry requested = waitlistRepository
+            .findById(waitlistId)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Waitlist entry not found."
+            ));
+
+        // Use same date-wide lock as notification approval
+        List<WaitlistEntry> entries =
+            waitlistRepository.findAllForDateForUpdate(
+                requested.getAppointmentDate()
+            );
+
+        for (WaitlistEntry entry : entries) {
+            entityManager.refresh(entry);
+        }
+
+        WaitlistEntry target = entries.stream()
+            .filter(entry ->
+                Objects.equals(
+                    entry.getWaitlistId(),
+                    waitlistId
+                )
+            )
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Waitlist entry not found."
+            ));
+
+        String status = target.getStatus();
+
+        // Only active entries may be skipped
+        if (!"WAITING".equals(status)
+                && !"NOTIFIED".equals(status)) {
+
+            throw new IllegalStateException(
+                "Only waiting or notified customers can be skipped."
+            );
+        }
+
+        // A waiting customer must be first in queue
+        // An already notified customer can be skipped so the next becomes eligible
+        if ("WAITING".equals(status)) {
+
+            boolean customerAhead = entries.stream()
+                .anyMatch(other ->
+                    !Objects.equals(
+                        other.getWaitlistId(),
+                        target.getWaitlistId()
+                    )
+                    && sameQueue(other, target)
+                    && "WAITING".equals(other.getStatus())
+                    && isEarlier(other, target)
+                );
+
+            if (customerAhead) {
+                throw new IllegalStateException(
+                    "Only the first waiting customer can be skipped."
+                );
+            }
+
+            boolean alreadyNotified = entries.stream()
+                .anyMatch(other ->
+                    sameQueue(other, target)
+                    && "NOTIFIED".equals(other.getStatus())
+                );
+
+            if (alreadyNotified) {
+                throw new IllegalStateException(
+                    "A customer has already been notified for this slot."
+                );
+            }
+        }
+
+        // Record override and remove entry from queue
+        target.setStatus("SKIPPED");
+        target.setSkipReason(reason);
 
         return waitlistRepository.save(target);
     }

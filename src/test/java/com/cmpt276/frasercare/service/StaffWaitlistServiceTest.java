@@ -59,18 +59,15 @@ class StaffWaitlistServiceTest {
         when(waitlists.findById(2L))
             .thenReturn(Optional.of(second));
 
-        // Hybrid system locks all entries on selected date
         when(waitlists.findAllForDateForUpdate(date))
             .thenReturn(List.of(first, second));
 
-        // Data used for staff dashboard eligibility
         when(waitlists
             .findByAppointmentDateOrderByServiceIdAscStartTimeAscJoinedAtAscWaitlistIdAsc(
                 date
             )
         ).thenReturn(List.of(first, second));
 
-        // Default: matching cancellation exists
         when(appointments.findByAppointmentDateAndStatus(
             date, "CANCELLED"
         )).thenReturn(List.of(
@@ -82,7 +79,6 @@ class StaffWaitlistServiceTest {
             )
         ));
 
-        // Default: no active bookings for the selected date
         when(appointments.findByAppointmentDateAndStatus(
             date, "BOOKED"
         )).thenReturn(List.of());
@@ -101,7 +97,6 @@ class StaffWaitlistServiceTest {
         entry.setStartTime(LocalTime.of(12, 30));
         entry.setEndTime(LocalTime.of(12, 45));
 
-        // Ensure FIFO order is predictable
         entry.setJoinedAt(
             LocalDateTime.of(date, LocalTime.of(9, 0))
                 .plusMinutes(id)
@@ -112,7 +107,7 @@ class StaffWaitlistServiceTest {
         return entry;
     }
 
-    // Create appointment for testing
+    // Create an appointment for testing
     private Appointment createAppointment(
             Long serviceId,
             Long customerId,
@@ -242,7 +237,6 @@ class StaffWaitlistServiceTest {
             date, "CANCELLED"
         )).thenReturn(List.of(cancelled));
 
-        // Dashboard should identify the first customer as ready
         Map<Long, StaffWaitlistService.NotificationEligibility> results =
             service.getNotificationEligibilityForDate(date);
 
@@ -314,7 +308,6 @@ class StaffWaitlistServiceTest {
         verify(waitlists, never()).save(any());
     }
 
-    // Test 13: System recommends only first waiting customer
     @Test
     void eligibilityIdentifiesFirstCustomerAsReady() {
         Map<Long, StaffWaitlistService.NotificationEligibility> results =
@@ -333,7 +326,6 @@ class StaffWaitlistServiceTest {
         );
     }
 
-    // Test 14: Reject notification if customer has since booked
     @Test
     void cannotNotifyCustomerWithConflictingBooking() {
         Appointment booked = createAppointment(
@@ -365,7 +357,6 @@ class StaffWaitlistServiceTest {
         verify(waitlists, never()).save(any());
     }
 
-    // Test 15: Prevent notifications across overlapping services
     @Test
     void cannotNotifyWhenOtherServiceHasOverlappingNotification() {
         WaitlistEntry otherNotified = createEntry(9L, "NOTIFIED");
@@ -402,5 +393,81 @@ class StaffWaitlistServiceTest {
         );
 
         verify(waitlists, never()).save(any());
+    }
+
+    // Test 16: Skipping 1st customer records reason and advances queue
+    @Test
+    void skipFirstCustomer_movesNextCustomerForward() {
+        WaitlistEntry result = service.skipWaitlistEntry(
+            1L,
+            "Customer declined"
+        );
+
+        assertEquals("SKIPPED", result.getStatus());
+        assertEquals("Customer declined", result.getSkipReason());
+
+        verify(waitlists).save(first);
+
+        List<WaitlistEntry> entries =
+            service.getWaitlistsForDate(date);
+
+        assertNull(entries.get(0).getQueuePosition());
+        assertEquals(1, entries.get(1).getQueuePosition());
+
+        Map<Long, StaffWaitlistService.NotificationEligibility> eligibility =
+            service.getNotificationEligibilityForDate(date);
+
+        assertTrue(eligibility.get(2L).ready());
+    }
+
+    // Test 17: Cannot skip customer out of order or without valid reason
+    @Test
+    void rejectsInvalidSkipRequests() {
+        assertThrows(
+            IllegalStateException.class,
+            () -> service.skipWaitlistEntry(
+                2L,
+                "Customer declined"
+            )
+        );
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.skipWaitlistEntry(
+                1L,
+                "Other reason"
+            )
+        );
+
+        assertEquals("WAITING", first.getStatus());
+        assertEquals("WAITING", second.getStatus());
+
+        verify(waitlists, never()).save(any());
+    }
+
+    // Test 18: Skipping notified customer allows queue to continue
+    @Test
+    void skipNotifiedCustomer_allowsNextNotification() {
+        first.setStatus("NOTIFIED");
+
+        Map<Long, StaffWaitlistService.NotificationEligibility> before =
+            service.getNotificationEligibilityForDate(date);
+
+        assertFalse(before.get(2L).ready());
+
+        WaitlistEntry skipped = service.skipWaitlistEntry(
+            1L,
+            "Unable to contact"
+        );
+
+        assertEquals("SKIPPED", skipped.getStatus());
+        assertEquals("Unable to contact", skipped.getSkipReason());
+
+        Map<Long, StaffWaitlistService.NotificationEligibility> after =
+            service.getNotificationEligibilityForDate(date);
+
+        assertTrue(after.get(2L).ready());
+
+        verify(waitlists).save(first);
     }
 }

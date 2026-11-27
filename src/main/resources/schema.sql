@@ -67,10 +67,25 @@ CREATE TABLE IF NOT EXISTS waitlist_entries (
     end_time TIME NOT NULL,
     joined_at TIMESTAMP NOT NULL,
     status VARCHAR(255) NOT NULL DEFAULT 'WAITING',
+    skip_reason VARCHAR(255),
 
     CHECK (end_time > start_time),
-    CHECK (status IN ('WAITING', 'NOTIFIED'))
+    CONSTRAINT waitlist_entries_status_check
+        CHECK (status IN ('WAITING', 'NOTIFIED', 'SKIPPED'))
 );
+
+ALTER TABLE waitlist_entries
+    ADD COLUMN IF NOT EXISTS skip_reason VARCHAR(255);
+
+-- Replace old status restriction with expanded one
+-- Constraint recreated on startup to support existing databases
+
+ALTER TABLE waitlist_entries
+    DROP CONSTRAINT IF EXISTS waitlist_entries_status_check;
+
+ALTER TABLE waitlist_entries
+    ADD CONSTRAINT waitlist_entries_status_check
+    CHECK (status IN ('WAITING', 'NOTIFIED', 'SKIPPED'));
 
 -- Pickup requests
 

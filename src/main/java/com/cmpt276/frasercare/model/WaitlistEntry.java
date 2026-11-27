@@ -35,6 +35,10 @@ public class WaitlistEntry {
     @Column(nullable = false)
     private String status = "WAITING";
 
+    // Reason for a staff approved skip
+    @Column(name = "skip_reason", length = 255)
+    private String skipReason;
+
     // Calculated dynamically; not stored in PostgreSQL
     @Transient
     private Integer queuePosition;
@@ -104,6 +108,14 @@ public class WaitlistEntry {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getSkipReason() {
+        return skipReason;
+    }
+
+    public void setSkipReason(String skipReason) {
+        this.skipReason = skipReason;
     }
 
     public Integer getQueuePosition() {

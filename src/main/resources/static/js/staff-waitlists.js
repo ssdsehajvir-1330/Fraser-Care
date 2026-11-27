@@ -17,7 +17,42 @@
     }
 
     let requestVersion = 0;
-    let notificationInProgress = false;
+    let actionInProgress = false;
+
+    // Display upcoming dates with active waitlists above the date picker
+    const activeDatesInfo = document.createElement("div");
+    activeDatesInfo.id = "staff-waitlist-active-dates";
+    activeDatesInfo.style.marginBottom = "8px";
+    activeDatesInfo.textContent = "Checking upcoming waitlist dates...";
+    waitlistDate.before(activeDatesInfo);
+
+    async function loadActiveWaitlistDates() {
+        try {
+            const response = await fetch("/api/staff/waitlists/active-dates", {
+                method: "GET",
+                credentials: "same-origin",
+                headers: { Accept: "application/json" }
+            });
+
+            if (!response.ok || response.redirected) {
+                throw new Error("Unable to retrieve active dates.");
+            }
+
+            const dates = await response.json();
+            if (!Array.isArray(dates)) {
+                throw new Error("Invalid active dates response.");
+            }
+
+            activeDatesInfo.textContent = dates.length
+                ? "Dates with active waitlists: " + dates.join(", ")
+                : "No upcoming active waitlists.";
+
+        } catch (error) {
+            console.error("Error loading active waitlist dates:", error);
+            activeDatesInfo.textContent = "Unable to load active waitlist dates.";
+        }
+    }
+
 
     // Display a feedback message
     function showWaitlistMessage(message, isError = false) {
@@ -27,7 +62,6 @@
         waitlistMessage.hidden = false;
     }
 
-    // Hide the current feedback message
     function hideWaitlistMessage() {
         waitlistMessage.hidden = true;
         waitlistMessage.textContent = "";
@@ -51,7 +85,6 @@
         return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
     }
 
-    // Get the queue position displayed to staff
     function formatQueuePosition(entry) {
         if (entry.status !== "WAITING") {
             return "—";
@@ -65,7 +98,7 @@
         return "Unavailable";
     }
 
-    // Read backend errors whether the response is JSON or plain text
+    // Read backend errors whether they are JSON or plain text
     async function getErrorMessage(response, fallback) {
         if (response.redirected || response.status === 401) {
             return "Your session has expired. Please log in again.";
@@ -82,7 +115,8 @@
                 return fallback;
             }
 
-            const contentType = response.headers.get("content-type") || "";
+            const contentType =
+                response.headers.get("content-type") || "";
 
             if (contentType.includes("text/html")) {
                 return fallback;
@@ -96,7 +130,8 @@
                 }
 
                 if (data && typeof data === "object") {
-                    const message = data.message || data.error || data.detail;
+                    const message =
+                        data.message || data.error || data.detail;
 
                     if (typeof message === "string" && message.trim()) {
                         return message.trim();
@@ -104,9 +139,11 @@
                 }
 
                 return fallback;
+
             } catch (error) {
                 return responseText;
             }
+
         } catch (error) {
             return fallback;
         }
@@ -119,33 +156,30 @@
         return cell;
     }
 
-    // Create one waitlist table row
+    // Create staff waitlist row
     function makeWaitlistRow(entry) {
         const row = document.createElement("tr");
 
-        // Appointment time
         const timeCell = makeCell(
             `${formatWaitlistTime(entry.startTime)} - ` +
             `${formatWaitlistTime(entry.endTime)}`
         );
 
-        // Customer name
         const customerCell = makeCell(
             entry.customerName ||
             `Customer #${entry.customerId}`
         );
 
-        // Pharmacy service
         const serviceCell = makeCell(
             entry.serviceName ||
             `Service #${entry.serviceId}`
         );
 
-        // Waitlist status
         const statusCell = document.createElement("td");
         const statusBadge = document.createElement("span");
 
-        const status = String(entry.status || "UNKNOWN").toUpperCase();
+        const status =
+            String(entry.status || "UNKNOWN").toUpperCase();
 
         statusBadge.className =
             "status staff-waitlist-status " +
@@ -154,21 +188,22 @@
         statusBadge.textContent = status;
         statusCell.appendChild(statusBadge);
 
-        // Queue position
         const positionCell = makeCell(
             formatQueuePosition(entry)
         );
 
-        // Show the backend eligibility result to staff
         const isFirstWaiting =
             status === "WAITING" &&
             entry.queuePosition === 1;
 
         const readyToNotify =
-            isFirstWaiting && entry.readyToNotify === true;
+            isFirstWaiting &&
+            entry.readyToNotify === true;
 
+        // Display hybrid notification eligibility
         if (isFirstWaiting) {
-            const eligibilityBadge = document.createElement("span");
+            const eligibilityBadge =
+                document.createElement("span");
 
             eligibilityBadge.className =
                 "staff-waitlist-status " +
@@ -198,11 +233,25 @@
             }
         }
 
-        // Staff can approve only when backend marks entry ready
+        // Show the recorded reason for previously skipped customers
+        if (status === "SKIPPED" && entry.skipReason) {
+            const reason = document.createElement("small");
+
+            reason.textContent =
+                `Reason: ${entry.skipReason}`;
+
+            statusCell.append(
+                document.createElement("br"),
+                reason
+            );
+        }
+
         const actionCell = document.createElement("td");
 
+        // Existing staff notification action
         if (readyToNotify) {
-            const notifyButton = document.createElement("button");
+            const notifyButton =
+                document.createElement("button");
 
             notifyButton.type = "button";
             notifyButton.className =
@@ -217,16 +266,66 @@
             actionCell.appendChild(notifyButton);
 
         } else if (status === "NOTIFIED") {
-            actionCell.textContent = "Already notified";
-
-        } else if (isFirstWaiting) {
-            actionCell.textContent = "Not ready";
+            actionCell.appendChild(
+                document.createTextNode("Already notified ")
+            );
 
         } else if (status === "WAITING") {
-            actionCell.textContent = "Waiting turn";
+            actionCell.appendChild(
+                document.createTextNode(
+                    isFirstWaiting ? "Not ready " : "Waiting turn"
+                )
+            );
 
         } else {
             actionCell.textContent = "—";
+        }
+
+        // Allow skipping only 1st waiting customer or already notified customer
+        if (isFirstWaiting || status === "NOTIFIED") {
+            const reasonSelect =
+                document.createElement("select");
+
+            reasonSelect.setAttribute(
+                "aria-label",
+                `Reason for skipping ${entry.customerName || "customer"}`
+            );
+
+            reasonSelect.append(
+                new Option("Skip reason", ""),
+                new Option(
+                    "Customer declined",
+                    "Customer declined"
+                ),
+                new Option(
+                    "Unable to contact",
+                    "Unable to contact"
+                )
+            );
+
+            const skipButton =
+                document.createElement("button");
+
+            skipButton.type = "button";
+            skipButton.className =
+                "pickup-action staff-waitlist-skip";
+
+            skipButton.textContent = "Skip";
+
+            skipButton.addEventListener("click", () => {
+                skipWaitlistEntry(
+                    entry,
+                    reasonSelect,
+                    skipButton
+                );
+            });
+
+            actionCell.append(
+                document.createTextNode(" "),
+                reasonSelect,
+                document.createTextNode(" "),
+                skipButton
+            );
         }
 
         row.append(
@@ -244,6 +343,7 @@
     // Retrieve waitlist entries for the selected date
     async function loadStaffWaitlists(successMessage = "") {
         const selectedDate = waitlistDate.value;
+        loadActiveWaitlistDates();
         const currentRequest = ++requestVersion;
 
         refreshButton.disabled = true;
@@ -256,6 +356,7 @@
                 "Please select a date to view waitlists.",
                 true
             );
+
             refreshButton.disabled = false;
             return false;
         }
@@ -300,7 +401,7 @@
                 );
             }
 
-            // Ignore outdated requests if the selected date changed
+            // Ignore outdated requests
             if (currentRequest !== requestVersion) {
                 return false;
             }
@@ -310,6 +411,7 @@
             if (entries.length === 0) {
                 waitlistEmpty.hidden = false;
                 waitlistTable.hidden = true;
+
             } else {
                 entries.forEach(entry => {
                     waitlistRows.appendChild(
@@ -352,31 +454,32 @@
         }
     }
 
-    // Notify the first waiting customer
-    async function notifyNextCustomer(entry, button) {
-        if (notificationInProgress) {
+    async function submitWaitlistAction(
+            entry,
+            button,
+            action,
+            reasonSelect = null) {
+
+        if (actionInProgress) {
             return;
         }
 
-        const confirmed = window.confirm(
-            `Notify ${entry.customerName || "this customer"} ` +
-            "that their appointment slot is available?\n\n" +
-            "This changes their waitlist status to NOTIFIED. " +
-            "It does not reserve the appointment."
-        );
+        actionInProgress = true;
+        const originalText = button.textContent;
 
-        if (!confirmed) {
-            return;
-        }
-
-        notificationInProgress = true;
         button.disabled = true;
-        button.textContent = "Notifying...";
+        button.textContent =
+            action === "skip" ? "Skipping..." : "Notifying...";
+
+        if (reasonSelect) {
+            reasonSelect.disabled = true;
+        }
+
         refreshButton.disabled = true;
         waitlistDate.disabled = true;
 
         try {
-            // Obtain the CSRF token required for POST requests
+            // Obtain CSRF token
             const csrfResponse = await fetch("/csrf", {
                 method: "GET",
                 credentials: "same-origin",
@@ -397,55 +500,134 @@
                 throw new Error("CSRF token is unavailable.");
             }
 
-            // Ask the backend to notify this customer
+            const headers = {
+                Accept: "application/json",
+                [csrf.headerName]: csrf.token
+            };
+
+            const options = {
+                method: "POST",
+                credentials: "same-origin",
+                headers
+            };
+
+            // Skip requests include reason in JSON body
+            if (action === "skip") {
+                headers["Content-Type"] = "application/json";
+
+                options.body = JSON.stringify({
+                    reason: reasonSelect.value
+                });
+            }
+
             const response = await fetch(
-                `/api/staff/waitlists/${encodeURIComponent(entry.waitlistId)}/notify`,
-                {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        Accept: "application/json",
-                        [csrf.headerName]: csrf.token
-                    }
-                }
+                `/api/staff/waitlists/${encodeURIComponent(entry.waitlistId)}/${action}`,
+                options
             );
 
             if (!response.ok || response.redirected) {
                 throw new Error(
                     await getErrorMessage(
                         response,
-                        "Unable to notify this customer."
+                        action === "skip"
+                            ? "Unable to skip this customer."
+                            : "Unable to notify this customer."
                     )
                 );
             }
 
-            // Refresh the queue after a successful notification
+            // Refresh dashboard after action
+            const status =
+                action === "skip" ? "SKIPPED" : "NOTIFIED";
+
             const refreshed = await loadStaffWaitlists(
-                "Customer marked as NOTIFIED successfully."
+                `Customer marked as ${status} successfully.`
             );
 
             if (!refreshed) {
                 showWaitlistMessage(
-                    "Customer was marked as NOTIFIED, but the " +
-                    "waitlist could not refresh. Please reload the page.",
+                    `Customer was marked as ${status}, but the waitlist ` +
+                    "could not refresh. Please reload the page.",
                     true
                 );
             }
 
         } catch (error) {
             console.error(
-                "Error notifying waitlist customer:",
+                `Error performing waitlist ${action}:`,
                 error
             );
 
             showWaitlistMessage(error.message, true);
 
         } finally {
-            notificationInProgress = false;
+            actionInProgress = false;
+
             button.disabled = false;
-            button.textContent = "Notify Next";
+            button.textContent = originalText;
+
+            if (reasonSelect) {
+                reasonSelect.disabled = false;
+            }
+
             refreshButton.disabled = false;
             waitlistDate.disabled = false;
+        }
+    }
+
+    // Staff confirm recommended notification
+    function notifyNextCustomer(entry, button) {
+        if (actionInProgress) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Notify ${entry.customerName || "this customer"} ` +
+            "that their appointment slot is available?\n\n" +
+            "This changes their waitlist status to NOTIFIED. " +
+            "It does not reserve the appointment."
+        );
+
+        if (confirmed) {
+            submitWaitlistAction(
+                entry,
+                button,
+                "notify"
+            );
+        }
+    }
+
+    // Staff skip customer with selected reason
+    function skipWaitlistEntry(entry, reasonSelect, button) {
+        if (actionInProgress) {
+            return;
+        }
+
+        const reason = reasonSelect.value;
+
+        if (!reason) {
+            showWaitlistMessage(
+                "Please select a skip reason.",
+                true
+            );
+
+            reasonSelect.focus();
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Skip ${entry.customerName || "this customer"}?\n\n` +
+            `Reason: ${reason}\n\n` +
+            "They will be removed from the active waitlist queue."
+        );
+
+        if (confirmed) {
+            submitWaitlistAction(
+                entry,
+                button,
+                "skip",
+                reasonSelect
+            );
         }
     }
 
@@ -455,6 +637,7 @@
 
     if (appointmentDate && appointmentDate.value) {
         waitlistDate.value = appointmentDate.value;
+
     } else {
         const today = new Date();
 
@@ -465,7 +648,7 @@
         ].join("-");
     }
 
-    // Refresh whenever staff select a different date
+    // Refresh whenever staff select another date
     waitlistDate.addEventListener("change", () => {
         loadStaffWaitlists();
     });
