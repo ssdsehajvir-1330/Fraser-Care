@@ -1,17 +1,27 @@
 const form = document.getElementById("drug-search-form");
 const typeEl = document.getElementById("search-type");
 const queryEl = document.getElementById("search-query");
+const includeCancelledEl = document.getElementById("include-cancelled");
+const includeCancelledLabel = document.getElementById("include-cancelled-label");
 const statusEl = document.getElementById("status");
 const table = document.getElementById("results");
 const tbody = table.querySelector("tbody");
 
 typeEl.addEventListener("change", () => {
-    queryEl.placeholder = typeEl.value === "din" ? "e.g. 01933531" : "e.g. Advil";
+    const isDin = typeEl.value === "din";
+    queryEl.placeholder = isDin ? "e.g. 01933531" : "e.g. Advil";
+    includeCancelledLabel.hidden = isDin;
+});
+
+includeCancelledEl.addEventListener("change", () => {
+    if (queryEl.value.trim()) form.requestSubmit();
 });
 
 form.addEventListener("submit", async e => {
     e.preventDefault();
     const params = new URLSearchParams({ [typeEl.value]: queryEl.value.trim() });
+    const includeCancelled = typeEl.value === "brand" && includeCancelledEl.checked;
+    if (includeCancelled) params.set("includeCancelled", "true");
     statusEl.textContent = "Searching...";
     table.hidden = true;
 
@@ -21,16 +31,18 @@ form.addEventListener("submit", async e => {
             statusEl.textContent = await res.text();
             return;
         }
-        showResults(await res.json());
+        showResults(await res.json(), typeEl.value === "brand" && !includeCancelled);
     } catch {
         statusEl.textContent = "Could not reach FraserCare. Check your connection and try again.";
     }
 });
 
-function showResults(products) {
+function showResults(products, marketedOnly) {
     tbody.replaceChildren();
     if (!products.length) {
-        statusEl.textContent = "No products found.";
+        statusEl.textContent = marketedOnly
+            ? "No marketed products found. Tick \"Show cancelled products\" to search all products."
+            : "No products found.";
         return;
     }
     products.forEach(p => {
@@ -38,6 +50,11 @@ function showResults(products) {
         [p.brandName, p.din, p.company, p.productClass].forEach(value => {
             row.insertCell().textContent = value;
         });
+        const badge = document.createElement("span");
+        badge.className = p.status === "Marketed" ? "status-badge marketed" : "status-badge";
+        badge.textContent = p.status || "Unknown";
+        row.insertCell().appendChild(badge);
+
         const button = document.createElement("button");
         button.type = "button";
         button.className = "details-button";

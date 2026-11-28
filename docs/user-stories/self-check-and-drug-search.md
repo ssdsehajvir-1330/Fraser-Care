@@ -49,11 +49,27 @@ Acceptance criteria:
 - Given I enter a DIN without its leading zeros, then it still works.
 - Given no product matches, then I see "No products found".
 
-## Backlog (Iteration 2+)
+## Iteration 3
+
+### DS-5: Marketed vs cancelled status (3 pts)
+**As a** customer, **I want to** see whether a product is still sold in Canada, with cancelled products hidden by default, **so that** I only see products I can actually buy.
+
+Acceptance criteria:
+- Given I search by brand name, then I only see products Health Canada lists as marketed, each labelled "Marketed".
+- Given I tick "Show cancelled products", then I also see products that are cancelled, dormant, or not yet marketed, each with its status, listed after the marketed ones.
+- Given I look up a DIN, then I see the product and its status even if it has been cancelled.
+
+### DS-6: Cache Health Canada responses (2 pts)
+**As a** pharmacy, **we want** repeat drug searches to reuse earlier Health Canada responses **so that** the page is faster and we don't overload a free public API.
+
+Acceptance criteria:
+- Given the same search or product lookup is made twice, then Health Canada is only called once.
+- Given a call to Health Canada fails, then the failure isn't cached and the next request tries again.
+- Cached responses expire after 12 hours so data stays current.
+
+## Backlog
 
 - **SC-4:** Book a suggested service directly from the self-check result. (3 pts; depends on booking)
 - **SC-5:** Only suggest flu shots during flu season. (1 pt)
 - **SC-6:** Staff can see anonymized self-check trends. (5 pts; needs a group decision on storage)
 - **DS-4:** View a product's active ingredients and strength. (3 pts)
-- **DS-5:** Show whether a product is marketed or cancelled, and hide cancelled products by default. (3 pts)
-- **DS-6:** Cache API responses to reduce calls to Health Canada. (2 pts)

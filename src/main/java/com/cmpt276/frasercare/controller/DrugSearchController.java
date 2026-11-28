@@ -19,12 +19,13 @@ public class DrugSearchController {
 
     @GetMapping
     public ResponseEntity<?> search(@RequestParam(required = false) String brand,
-                                    @RequestParam(required = false) String din) {
+                                    @RequestParam(required = false) String din,
+                                    @RequestParam(defaultValue = "false") boolean includeCancelled) {
         try {
             if (din != null && !din.isBlank()) {
                 return ResponseEntity.ok(drugSearchService.findByDin(din));
             }
-            return ResponseEntity.ok(drugSearchService.searchByBrandName(brand));
+            return ResponseEntity.ok(drugSearchService.searchByBrandName(brand, includeCancelled));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

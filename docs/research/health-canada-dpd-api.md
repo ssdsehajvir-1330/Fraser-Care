@@ -1,7 +1,7 @@
 # Research: Health Canada Drug Product Database (DPD) API
 
 Owner: Hassaan Nasim
-Status: Iteration 2
+Status: Iteration 3
 
 ## Why this API
 
@@ -110,6 +110,22 @@ Error handling: if Health Canada is down or times out, our endpoint returns **50
 - If there are no ingredients and the status is `null`, the drug code doesn't exist, and the endpoint returns 404.
 - The same 502 handling applies if Health Canada is down.
 
+### Status and caching (Iteration 3)
+
+**Status (DS-5).** `drugproduct/` doesn't return a status, but it accepts a `status` filter. A plain "advil" search returns 48 products; `status=2` returns the 25 that are marketed.
+
+- Default brand search makes one call with `status=2`, and every result is labelled "Marketed".
+- With "Show cancelled products" ticked, it also makes the unfiltered call. Products in the marketed list are labelled from it; the rest get their exact status from `status/?id=`. Those lookups run in parallel on virtual threads, so 20+ lookups don't wait on each other. Marketed products are listed first.
+- DIN lookups always show the product with its status. Someone checking the box in their cabinet should still find a cancelled product.
+- "Hidden by default" covers everything that isn't marketed (cancelled, dormant, approved but never sold), since none of these are on the shelf.
+
+**Caching (DS-6).** Each `HealthCanadaDrugClient` method is `@Cacheable` with its own cache (brand, marketed brand, DIN, ingredients, form, route, schedule, status), so keys from different endpoints can't collide. The cache is Caffeine with `maximumSize=2000,expireAfterWrite=12h`, set in `application.properties`.
+
+- Brand queries are lowercased first, so "Advil" and "advil" share one entry.
+- Exceptions aren't cached, so a Health Canada outage doesn't stick.
+- Status lookups from search and from the Details view share the `drugStatus` cache.
+- `HealthCanadaDrugClientCacheTest` checks that a repeated call only hits the (mock) API once.
+
 ### Notes from implementing it
 
 - Brand names can contain `&` (e.g. "ADVIL COLD & SINUS"). If the value goes straight into the URI template, the `&` breaks the query string. The client passes the search term as a URI variable (`{value}`), so Spring encodes it properly.
@@ -132,8 +148,8 @@ The DPD dataset is published on the Open Government Portal [3]. Health Canada's 
 
 **Iteration 2–3**
 - [x] Product details view: active ingredients + strength, plus form, route, schedule, and status
-- [ ] Show marketed/cancelled status and hide cancelled products by default
-- [ ] Cache responses (Spring `@Cacheable`)
+- [x] Show marketed/cancelled status and hide cancelled products by default
+- [x] Cache responses (Spring `@Cacheable` + Caffeine)
 - [ ] French support (`lang=fr`)
 - [ ] Link from the home page / nav
 - [ ] Maybe link to self-check results (e.g. "Medication Review → look up your meds")

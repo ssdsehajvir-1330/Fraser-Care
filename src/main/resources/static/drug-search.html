@@ -21,6 +21,9 @@
             </select>
             <input id="search-query" type="text" placeholder="e.g. Advil" required>
             <button type="submit">Search</button>
+            <label id="include-cancelled-label" class="include-cancelled">
+                <input id="include-cancelled" type="checkbox"> Show cancelled products
+            </label>
         </form>
 
         <p id="status" role="status"></p>
@@ -32,6 +35,7 @@
                     <th>DIN</th>
                     <th>Company</th>
                     <th>Class</th>
+                    <th>Status</th>
                     <th><span class="visually-hidden">Details</span></th>
                 </tr>
             </thead>
